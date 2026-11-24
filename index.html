@@ -1,0 +1,1647 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>余りもの献立メーカー | v0.28 PWA</title>
+<style>
+:root{--ink:#24342e;--muted:#65776b;--bg:#f5f8f4;--white:#fff;--green:#226047;--pale:#ecf4ec;--border:#dce7db;--orange:#fdf1dc}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color:var(--ink);font-size:15px;line-height:1.6}
+header{background:#173e2e;color:#fff;padding:32px 16px 34px}
+.wrap{max-width:940px;margin:auto}
+.logo{font-size:11px;letter-spacing:.14em;font-weight:750;color:#b7d6c2}
+h1{font-size:clamp(24px,5.5vw,32px);margin:5px 0 7px;line-height:1.3}
+header p{color:#e0f1e5;font-size:13px;margin:0;max-width:620px}
+main{max-width:940px;margin:22px auto 60px;padding:0 16px}
+.panel{border:1px solid var(--border);background:#fff;border-radius:16px;padding:21px;margin-bottom:18px;box-shadow:0 4px 18px rgba(11,44,23,.025)}
+.panel h2{font-size:18px;margin:0 0 8px}p{margin:0 0 12px}.muted{font-size:12px;color:var(--muted)}
+.form-label{display:block;font-size:13px;font-weight:750;margin-bottom:8px}
+.input-row{display:flex;gap:9px;flex-wrap:wrap}
+input{flex:1;min-width:180px;border:1px solid #bccfbf;background:#fff;border-radius:11px;padding:13px 14px;font-size:16px;outline-color:#348763;color:var(--ink);font-family:inherit}
+button{cursor:pointer;font:inherit;line-height:1.3;border-radius:10px;border:1px solid transparent;padding:12px 15px;font-weight:750;transition:background .15s}
+button:focus-visible{outline:3px solid #6bb58b;outline-offset:2px}
+.primary{background:var(--green);color:white}.primary:hover{background:#154c36}
+.secondary{background:white;border-color:#adc8b4;color:var(--green)}.secondary:hover{background:#eff7f1}
+.small{font-size:12px;padding:8px 11px}
+.examples{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:13px}
+.examples>span{font-size:12px;color:var(--muted);margin-right:3px}
+.pill{padding:5px 11px;background:var(--pale);color:#30634a;border:1px solid #daeadc;font-size:12px;border-radius:99px}
+.input-hint{font-size:12px;color:#697b6d;margin:6px 0 0}.notice{border-radius:11px;background:#f3f7f3;padding:12px 13px;color:#637364;font-size:12px;margin-top:16px}
+.notice strong{color:var(--ink)}
+.coverage{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 14px}.cover-label{color:#687c70;font-size:12px}.cover-chip{font-size:12px;padding:4px 9px;border-radius:99px;background:#e9f4eb;color:#276446;border:1px solid #daebdf}.cover-chip.unused{color:#825935;border-color:#f0dec6;background:#fff5e7}.topline{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.topline h2{margin:0}.intro{color:#607268;font-size:13px;margin-top:6px}
+.two{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(270px,1fr);gap:18px;align-items:start}
+.cardlist{display:grid;gap:10px}
+.recipe-card{border-radius:12px;background:#fff;border:1px solid var(--border);overflow:hidden}
+.recipe-hd{display:flex;align-items:flex-start;gap:10px;padding:13px 15px 8px}
+.daytag{background:#e7f2e9;border-radius:7px;font-size:11px;font-weight:800;color:#286344;padding:5px 7px;flex:none;margin-top:2px}
+.recipe-info{flex:1;min-width:0}.recipe-title{font-weight:760;font-size:15px;line-height:1.45}.kind{font-size:11px;color:#64836d;margin-top:2px}
+.ings{font-size:12px;color:#4e6857;margin:1px 15px 10px 66px}
+.target-ingredient{font-weight:800;color:var(--green);background:#ebf6ed;border-radius:5px;padding:1px 4px}
+.recipe-card details{border-top:1px solid #edf2ec;padding:6px 15px 8px}
+.recipe-card summary{cursor:pointer;color:#276549;font-size:12px;font-weight:730;padding:5px 0}
+.recipe-card details p{font-size:13px;padding-top:6px;margin:0 0 8px;color:#43594a}
+.shop{position:sticky;top:12px}
+.shop h2{margin-bottom:0}.subhead{color:#6d7b71;font-size:12px;margin-bottom:12px}
+.items{display:grid;gap:7px}.item{display:flex;align-items:center;gap:8px;background:#f7faf6;border:1px solid #e1ebe0;border-radius:10px;padding:5px 6px 5px 13px;min-height:42px}
+.itemname{font-size:14px;flex:1;font-weight:650}
+.remove{background:#fff;color:#73877a;border:1px solid #e0e7e0;width:33px;height:33px;display:grid;place-items:center;padding:0;font-size:18px;line-height:1;border-radius:8px}
+.remove:hover{color:#9c392c;border-color:#e5c6c0;background:#fff6f5}
+.empty{background:#f4f8f3;border-radius:10px;padding:14px;font-size:12px;color:#61786a;text-align:center}
+.restored{font-size:12px;margin:12px 0 7px;color:#536b5a}.restore-row{display:flex;gap:6px;flex-wrap:wrap}
+.restore{border:1px solid #b9d9c2;background:#f1faf3;color:#2a6446;padding:5px 8px;font-size:12px;border-radius:8px;font-weight:500}
+.btn-group{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.btn-group button{flex:1;font-size:12px;padding:12px 8px}
+.warn{background:var(--orange);color:#6f5937;font-size:12px;border-radius:9px;padding:11px 13px;margin-top:15px}
+footer{font-size:12px;color:#758177;text-align:center;padding-bottom:28px}
+@media(max-width:740px){main{padding:0 12px;margin-top:13px}.panel{padding:17px;border-radius:14px}.two{grid-template-columns:1fr}.shop{position:static}header{padding:27px 14px}.recipe-hd{padding:12px 12px 8px}.ings{margin-left:63px;margin-right:12px}}
+@media print{header{background:#fff;color:#000;padding:0 0 12px}header .logo,header p,.form-panel,button,.notice,.warn,footer{display:none!important}main{margin:0;padding:0}.two{display:block}.recipe-card{break-inside:avoid;margin:8px 0}.shop{margin-top:16px}.panel{box-shadow:none}}
+
+/* v0.5: ingredient picker */
+.foods-panel{background:#f7faf7;border:1px solid #e1eae0;border-radius:13px;padding:13px;margin-top:14px}
+.foods-header{display:flex;justify-content:space-between;gap:9px;align-items:center;margin-bottom:10px}
+.foods-header strong{font-size:13px}.foods-header strong span{color:#557562;font-size:12px;font-weight:500}
+.foods-header p{margin:2px 0 0;font-size:11px;color:#748277}
+.foods-header button{flex:none;padding:7px 10px;font-size:11px}
+.foods-grid{display:flex;flex-wrap:wrap;gap:7px}
+.food-chip{border:1px solid #cdded0;background:#fff;color:#315c43;border-radius:99px;padding:7px 11px;font-size:12px;font-weight:650;min-height:32px}
+.food-chip[aria-pressed="true"]{background:#236749;color:white;border-color:#236749}
+.food-chip:hover{border-color:#2f8060}
+.food-category{margin-top:13px}.food-category h3{margin:0 0 7px;color:#586b5c;font-weight:750;font-size:12px}
+.picked{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:12px}
+.picked-label{font-size:11px;color:#607767;margin-right:2px}
+.picked-chip{border:1px solid #b8dac3;background:#edf7ef;color:#24563d;font-size:11px;padding:5px 9px;border-radius:99px}
+.picked-chip.missing{border-color:#edcaba;background:#fff3ed;color:#9c4b26}
+.picked-empty{font-size:11px;color:#849488}
+@media(max-width:450px){.foods-header{align-items:flex-start}.food-chip{padding:8px 10px}.picked{gap:5px}}
+.selection-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:17px}
+.selection-actions .primary{flex:1;min-width:175px}
+@media(max-width:430px){.selection-actions .primary{width:100%;flex:auto}}
+
+/* v0.7 Recipe library */
+.manage-panel>summary{list-style:none;cursor:pointer;font-weight:800;font-size:16px;color:var(--green);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.manage-panel>summary::-webkit-details-marker{display:none}
+.manage-panel>summary::after{content:'開く ▾';color:#52715d;font-size:12px}
+.manage-panel[open]>summary::after{content:'閉じる ▴'}
+.manage-inner{padding-top:18px}
+.manage-inner h3{font-size:14px;margin:16px 0 6px}
+.manage-help{color:#65766a;font-size:12px;margin:5px 0 10px}
+.manage-inner textarea,.manage-inner input,.manage-inner select{width:100%;border:1px solid #bfd1c1;border-radius:9px;padding:10px 11px;color:var(--ink);font:14px/1.55 inherit;min-width:0;background:white}
+.manage-inner textarea{resize:vertical;font:13px/1.6 ui-monospace,Consolas,monospace;min-height:135px}
+.manage-inner .editor-steps{font-family:inherit;min-height:85px}
+.manage-inner .editor-amounts{min-height:105px}
+.manage-inner label{display:block;font-size:12px;font-weight:750;margin:10px 0 4px}
+.manage-buttons{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.manage-buttons button,.manage-buttons label{font-size:12px;padding:10px 12px}
+.file-label{background:#fff;color:var(--green);border:1px solid #adc8b4;border-radius:10px;cursor:pointer;font-weight:750;display:inline-flex!important;align-items:center;margin:0!important}
+.file-label input{display:none}
+.manage-status{padding:11px;border-radius:10px;background:#f2f8f3;color:#345d42;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.manage-status.error{background:#fff0ed;color:#8b3d30}
+.mine-list{display:grid;gap:6px;max-height:250px;overflow:auto}
+.mine-row{border:1px solid #e2ebe2;border-radius:10px;padding:9px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mine-row .mine-name{font-size:13px;font-weight:730;min-width:0;overflow-wrap:anywhere}
+.mine-actions{display:flex;gap:5px;flex:none}
+.mine-actions button{font-size:11px;padding:6px 8px}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.edit-grid .full{grid-column:1/-1}
+.edit-head{display:flex;align-items:center;justify-content:space-between;gap:9px}
+.edit-head button{font-size:11px;padding:6px 9px}
+.recipe-source{font-size:12px;margin:5px 0 8px;display:inline-block;color:#226047;text-decoration:underline;text-underline-offset:2px}
+.danger-button{color:#983b2b;border-color:#e4bcb2}
+@media(max-width:520px){.edit-grid{grid-template-columns:1fr}.edit-grid .full{grid-column:auto}.manage-buttons button,.manage-buttons label{flex:1;justify-content:center}}
+@media print{.manage-panel{display:none!important}}
+
+/* v0.9: browse all recipes independently from menu planning */
+.browse-panel>summary{list-style:none;cursor:pointer;display:flex;gap:12px;align-items:center;justify-content:space-between;color:var(--green);font-size:17px;font-weight:800}
+.browse-panel>summary::-webkit-details-marker{display:none}
+.browse-panel>summary::after{content:'開く ▾';font-size:12px;color:#52715d;flex:none}
+.browse-panel[open]>summary::after{content:'閉じる ▴'}
+.browse-inner{padding-top:17px}
+.browse-tools{display:grid;grid-template-columns:minmax(0,2fr) minmax(130px,1fr) minmax(140px,1fr);gap:9px;margin:13px 0 8px}
+.browse-tools input,.browse-tools select{min-width:0;width:100%;border:1px solid #bfd1c1;border-radius:10px;padding:11px 12px;background:white;color:var(--ink);font:14px/1.5 inherit}
+.browse-tools input{font-size:16px}
+.browse-status{font-size:12px;color:var(--muted);padding:5px 1px 11px}
+.browse-list{display:grid;gap:9px}
+.browse-card{border:1px solid var(--border);border-radius:12px;background:#fbfdfb;overflow:hidden}
+.browse-card details{padding:0}
+.browse-card summary{cursor:pointer;list-style:none;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.browse-card summary::-webkit-details-marker{display:none}
+.browse-card summary::after{content:'＋';color:#528263;font-size:20px;font-weight:400;flex:none}
+.browse-card details[open]>summary::after{content:'－'}
+.browse-card .browse-name{font-size:14px;font-weight:750;line-height:1.5;overflow-wrap:anywhere}
+.browse-card .browse-meta{color:#718376;font-size:11px;margin-top:3px}
+.browse-details{border-top:1px solid #e7eee5;padding:12px 14px 13px;font-size:13px;line-height:1.7}
+.browse-details .browse-caption{font-size:11px;color:#6a796c;font-weight:750;margin-bottom:4px}
+.browse-details p{margin:0 0 10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.browse-details .browse-ingredient{color:#395d45}
+.browse-details a{display:inline-block;color:var(--green);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.browse-more{width:100%;margin-top:12px}
+.browse-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:11px}
+.browse-actions button{font-size:12px;padding:8px 12px}
+.edit-notice{color:#577362;font-size:12px;padding:7px 0}
+.amounts-list{display:grid;gap:3px;margin:6px 0 12px;padding:0;list-style:none;color:#395d45;font-size:13px}
+.amounts-list li{padding:3px 0;border-bottom:1px dotted #dbe7dc}
+.servings-info{font-size:12px;color:#52735b;margin:6px 0}
+
+
+/* v0.23: a clear search-complete action for Android's software keyboard */
+.browse-search{display:flex;gap:8px;min-width:0}
+.browse-tools .browse-search input{flex:1;width:auto;min-width:0}
+.browse-search button{flex:none;padding:10px 15px;white-space:nowrap;font-size:14px}
+#browse-status{scroll-margin-top:85px}
+@media(max-width:680px){.browse-tools{grid-template-columns:1fr 1fr}.browse-tools .browse-search{grid-column:1/-1}}
+@media(max-width:360px){.browse-search button{padding:10px 12px}}
+@media print{.browse-panel{display:none!important}}
+
+/* v0.15: per-day pinning and recipe replacement */
+.plan-hint{font-size:12px;color:#56705e;background:#f0f7f0;border-radius:9px;padding:9px 12px;margin:10px 0}
+.day-actions{display:flex;gap:6px;flex-wrap:wrap;margin:0 12px 12px 66px}
+.day-actions button{font-size:11px;padding:7px 10px;min-height:34px}
+.keep-btn{border:1px solid #bbd5c2;background:#f6faf6;color:#426750}
+.keep-btn[aria-pressed="true"]{background:#226047;color:#fff;border-color:#226047}
+.choose-btn{border:1px solid #c7d6c8;background:white;color:#286047}
+.day-picker{padding:13px 14px 14px;border-top:1px solid #e0ebdf;background:#f9fcf8}
+.picker-heading{font-weight:750;font-size:13px;margin-bottom:8px}
+.picker-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:8px}
+.picker-controls input{font-size:14px;min-width:0;width:100%;padding:9px 10px}
+.picker-controls select{font:12px/1.4 inherit;padding:9px 5px;border:1px solid #bed2c1;background:white;color:#274e36;border-radius:8px;max-width:150px}
+.picker-count{font-size:11px;color:#6b7e6c;margin:5px 0}
+.picker-results{display:grid;gap:6px;max-height:320px;overflow-y:auto}
+.picker-item{display:block;text-align:left;padding:10px 11px;background:white;border:1px solid #dbe8dc;border-radius:8px;color:#2c4935;font-weight:600;width:100%;font-size:13px}
+.picker-item:hover{background:#eef7ed;border-color:#9ac2a6}
+.picker-item span{display:block;color:#677d6b;font-size:11px;font-weight:400;margin-top:3px;overflow-wrap:anywhere}
+.picker-more{font-size:11px;margin-top:8px;width:100%}
+@media(max-width:450px){.day-actions{margin-left:12px}.day-actions button{flex:1;padding:8px 6px}.picker-controls{grid-template-columns:1fr}.picker-controls select{max-width:100%}}
+/* v0.15: inactive stock library */
+.stash-panel>summary{list-style:none;cursor:pointer;font-weight:800;font-size:16px;color:var(--green);display:flex;justify-content:space-between;gap:12px}
+.stash-panel>summary::-webkit-details-marker{display:none}
+.stash-panel>summary::after{content:'開く ▾';font-size:12px;color:#52715d;flex-shrink:0}
+.stash-panel[open]>summary::after{content:'閉じる ▴'}
+.stash-inner{padding-top:14px}
+.stash-filter{display:grid;grid-template-columns:minmax(0,1fr) 155px;gap:8px;margin:10px 0}
+.stash-filter input{min-width:0;width:100%;padding:10px;font-size:15px}
+.stash-filter select{width:100%;font-size:13px;padding:9px;border:1px solid #bfd1c1;border-radius:9px;background:white;color:var(--ink)}
+.stash-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;margin:11px 0}
+.stash-bar button:disabled{opacity:.5;cursor:default}
+.stash-list{display:grid;gap:8px}
+.stash-row{border:1px solid #e0e9df;border-radius:11px;padding:10px 12px;background:#fcfefc}
+.stash-row-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stash-row label{display:flex;gap:8px;align-items:center;cursor:pointer;flex:1;min-width:0;font-size:13px;font-weight:750}
+.stash-row input[type=checkbox]{flex:none;min-width:0;width:18px;height:18px;accent-color:#226047}
+.stash-row .stash-label{min-width:0;overflow-wrap:anywhere}
+.stash-row .stash-done{font-size:11px;color:#537d5f;white-space:nowrap}
+.stash-row .stash-mat{font-size:11px;color:#59725d;margin:4px 0 0 26px;overflow-wrap:anywhere}
+.stash-row details{font-size:12px;margin:5px 0 0 26px}
+.stash-row details summary{color:#2d6c4d;cursor:pointer}
+.stash-row details p{margin:6px 0 0}
+@media(max-width:520px){.stash-filter{grid-template-columns:1fr}.stash-bar button{width:100%}}
+@media print{.stash-panel{display:none!important}}
+
+/* v0.15: recipe count is flexible; manual entry gets an obvious route */
+.manual-cta{margin-top:10px;padding:11px 12px;border:1px dashed #9fbbab;background:#f5faf6;border-radius:11px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.manual-cta span{font-size:13px;color:#345d48;font-weight:700}
+.manual-intro{border-left:4px solid #21845d;padding:10px 12px;background:#f2f8f3;border-radius:5px;margin:20px 0 10px;scroll-margin-top:25px}
+.manual-intro strong{font-size:14px;color:#165b43}
+.manual-intro p{font-size:12px;color:#486854;margin:4px 0 0}
+@media(max-width:520px){.manual-cta button{width:100%}}
+
+/* v0.18: photos are optional thumbnails; source images are not imported */
+.recipe-thumb{width:76px;height:70px;flex:none;border-radius:9px;object-fit:cover;background:#e6efe7;border:1px solid #dce8da}
+.browse-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;flex:none;margin-right:5px;background:#e6eee6}
+.browse-title-wrap{flex:1;min-width:0}
+.browse-card summary{justify-content:flex-start}
+.browse-card summary::after{margin-left:auto}
+.recipe-photo-large{display:block;width:min(100%,420px);max-height:260px;object-fit:cover;border-radius:10px;margin:6px 0 13px}
+.photo-upload{padding:12px;border:1px dashed #a8c7b2;background:#f6faf6;border-radius:11px;margin:7px 0}
+.photo-upload input[type=file]{width:100%;min-width:0;padding:8px;font-size:13px}
+.photo-preview{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px}
+.photo-preview img{width:118px;height:94px;object-fit:cover;border-radius:9px;border:1px solid #d3e2d4}
+.photo-preview button{font-size:12px;padding:8px 10px}
+@media(max-width:450px){.recipe-thumb{width:58px;height:58px}.browse-thumb{width:46px;height:46px}}
+/* v0.19: JSON import result popup */
+.import-dialog{border:1px solid #cfe2d2;border-radius:17px;background:#fff;color:var(--ink);padding:0;width:min(calc(100vw - 28px),490px);max-height:min(85vh,680px);box-shadow:0 20px 60px rgba(0,30,16,.26)}
+.import-dialog::backdrop{background:rgba(12,29,20,.48)}
+.import-dialog-body{padding:23px 22px 20px}
+.import-dialog h2{font-size:19px;line-height:1.4;margin:0 0 8px}
+.import-dialog p{margin:0 0 12px;font-size:13px;color:#536d5b}
+.import-counts{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.import-count{background:#f1f7f2;border:1px solid #dce8df;border-radius:9px;padding:8px 10px;font-size:13px;font-weight:700}
+.import-count strong{font-size:18px;color:#1c6544;margin-left:5px}
+.import-count.has-errors{background:#fff3ef;border-color:#eccfc5;color:#8c4432}
+.import-count.has-errors strong{color:#9b3a26}
+.import-dialog h3{font-size:13px;margin:10px 0 5px}
+.import-dialog ul{font-size:13px;line-height:1.5;max-height:170px;overflow:auto;margin:5px 0 12px;padding-left:23px}
+.import-detail{background:#fff4ef;color:#8e4330;border-radius:8px;padding:9px 10px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}
+.import-dialog-actions{display:flex;justify-content:flex-end;margin-top:14px}
+.import-dialog-actions button{min-width:125px}
+@media(max-width:420px){.import-dialog-body{padding:18px 16px}.import-count{padding:7px 9px}}
+@media print{.import-dialog{display:none!important}}
+
+/* v0.20: one task at a time: import, manual entry, or saved list. */
+.manage-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:12px}
+.manage-tabs button{min-width:0;background:#f3f7f2;border:1px solid #ccdece;color:#496a52;font-size:13px;padding:12px 5px;border-radius:10px;white-space:nowrap}
+.manage-tabs button[aria-selected="true"]{background:var(--green);border-color:var(--green);color:white}
+.manage-tabs button:focus-visible{outline:3px solid #6bb58b;outline-offset:2px}
+.manage-tab-body{padding-top:6px}
+.manage-tab-body>h3:first-child{margin-top:5px}
+.manage-panel .manage-status{margin-bottom:10px}
+.manage-panel .mine-list{max-height:280px;overflow-y:auto;overscroll-behavior:contain}
+.edit-notice{font-size:12px;color:#245d40;margin-top:8px;white-space:pre-wrap}
+.edit-notice.error{color:#973d31}
+@media(max-width:380px){.manage-tabs button{font-size:12px;padding:10px 4px}}
+
+/* v0.22: separate recipe catalogue, registration and meal planning screens. */
+.app-nav{position:sticky;top:0;z-index:12;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 3px 12px rgba(20,50,30,.07)}
+.app-nav-inner{max-width:940px;margin:auto;padding:9px 14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.app-nav-btn{background:#f3f7f2;color:#43614d;border:1px solid #d7e4d8;padding:12px 7px;border-radius:10px;font-size:14px;white-space:nowrap}
+.app-nav-btn[aria-current="page"]{background:var(--green);color:#fff;border-color:var(--green)}
+.app-nav-btn:hover:not([aria-current="page"]){background:#e7f2e9}
+.app-screen{min-height:40vh}
+.screen-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:3px 2px 0}
+.screen-heading h2{font-size:21px;margin:0 0 3px;line-height:1.5}
+.screen-heading p{font-size:13px;color:var(--muted);margin:0}
+.screen-heading button{flex:none}
+#screen-browse .browse-panel>summary,#screen-register .manage-panel>summary{display:none}
+#screen-browse .browse-inner,#screen-register .manage-inner{padding-top:0}
+#screen-register .manage-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+#screen-browse .personal-tools>summary{font-size:14px;font-weight:750;color:var(--green);cursor:pointer}
+#screen-browse .personal-tools>section{margin-top:14px}
+#screen-browse .personal-tools .mine-list{max-height:300px;overflow-y:auto}
+@media(max-width:440px){.app-nav-inner{padding:8px 9px;gap:5px}.app-nav-btn{font-size:12px;padding:11px 3px}.screen-heading h2{font-size:18px}.screen-heading button{font-size:11px}}
+@media print{.app-nav,.screen-heading{display:none!important}}
+
+/* v0.25: add a catalogue recipe directly to a pinned meal slot. */
+.pin-dialog{border:1px solid #cfe2d2;border-radius:17px;background:#fff;color:var(--ink);padding:0;width:min(calc(100vw - 28px),490px);max-height:85vh;box-shadow:0 20px 60px rgba(0,30,16,.26)}
+.pin-dialog::backdrop{background:rgba(12,29,20,.48)}
+.pin-dialog-body{padding:22px 20px 20px}
+.pin-dialog h2{font-size:19px;margin:0 0 8px}
+.pin-dialog p{font-size:13px;color:#536d5b;margin:0 0 12px}
+.pin-slot-list{display:grid;gap:8px;margin:12px 0}
+.pin-slot-list button{text-align:left;white-space:normal;border:1px solid #cddfd1;background:#f6faf7;color:#244e35;padding:12px 14px;border-radius:10px;font-size:14px;line-height:1.5}
+.pin-slot-list button:hover{background:#e9f4ec;border-color:#69a480}
+.pin-slot-list button:disabled{opacity:.55;cursor:not-allowed}
+.pin-slot-list .slot-current{display:block;font-size:12px;color:#58725e;margin-top:3px}
+.pin-dialog-close{width:100%;margin-top:8px}
+@media(max-width:420px){.pin-dialog-body{padding:19px 16px}}
+@media print{.pin-dialog{display:none!important}}
+
+/* v0.25: optional personal background without adding another main-screen tab. */
+.header-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:5px}
+.header-theme-btn{font-size:12px;font-weight:750;white-space:nowrap;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.42);border-radius:10px;padding:8px 11px}
+.header-theme-btn:hover{background:rgba(255,255,255,.23)}
+body.has-bg-photo .panel{background:rgba(255,255,255,.94);box-shadow:0 4px 22px rgba(8,35,22,.13)}
+body.has-bg-photo .app-nav{background:rgba(255,255,255,.96)}
+body.has-bg-photo main{isolation:isolate}
+.theme-dialog{border:1px solid #cbded0;border-radius:17px;background:#fff;color:var(--ink);padding:0;width:min(calc(100vw - 24px),520px);max-height:min(90dvh,760px);overflow:auto;box-shadow:0 20px 70px rgba(0,30,16,.25)}
+.theme-dialog::backdrop{background:rgba(9,27,17,.6)}
+.theme-dialog-body{padding:22px 20px 20px}
+.theme-dialog h2{font-size:19px;margin:0 0 7px}
+.theme-dialog h3{font-size:14px;margin:18px 0 8px}
+.theme-dialog p{color:#64756a;font-size:12px;margin:3px 0 13px}
+.theme-color-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.theme-color-row input[type=color]{width:65px;height:46px;min-width:65px;flex:none;border:1px solid #c8d7ca;border-radius:11px;padding:3px;cursor:pointer}
+.theme-color-code{font:13px ui-monospace,monospace;color:#486555}
+.theme-presets{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 3px}
+.theme-preset{width:42px;height:42px;border:2px solid #cad9ce;outline:1px solid rgba(255,255,255,.7);border-radius:50%;padding:0}
+.theme-preset[aria-pressed=true]{outline:3px solid var(--green);outline-offset:2px}
+.theme-photo-input{display:block;width:100%;border:1px dashed #adcab6;border-radius:10px;padding:13px 10px;background:#f8faf8;color:#3d5d48;font:13px inherit}
+.theme-photo-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}
+.theme-photo-preview{display:flex;align-items:center;gap:11px;margin-top:12px}
+.theme-photo-preview img{width:116px;height:74px;object-fit:cover;border-radius:8px;border:1px solid #d0dfd4}
+.theme-photo-preview span{color:#526959;font-size:12px}
+.theme-status{font-size:12px;border-radius:9px;padding:10px 11px;background:#eef7f0;color:#286046;margin-top:13px;min-height:38px}
+.theme-status.error{background:#fff1ea;color:#923e2e}
+.theme-dialog-actions{display:flex;justify-content:space-between;gap:8px;margin-top:17px}
+.theme-dialog-actions button{min-width:110px}
+@media(max-width:410px){.header-theme-btn{padding:6px 8px;font-size:11px}.theme-dialog-body{padding:17px 15px}.theme-preset{width:39px;height:39px}}
+@media print{.header-theme-btn,.theme-dialog{display:none!important}body{background:#fff!important;background-image:none!important}header{background-image:none!important}}
+
+/* v0.26: user-selectable title, header, accents and offline fonts. */
+:root{--header-bg:#173e2e;--header-ink:#fff;--header-sub:#e0f1e5;--header-logo:#b7d6c2;--header-btn-bg:rgba(255,255,255,.12);--header-btn-border:rgba(255,255,255,.42);--accent-ink:#fff;--app-font:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+body{font-family:var(--app-font)}
+header{background-color:var(--header-bg);color:var(--header-ink)}
+header .logo{color:var(--header-logo)}
+header p{color:var(--header-sub)}
+.header-theme-btn{background:var(--header-btn-bg);color:var(--header-ink);border-color:var(--header-btn-border)}
+.header-theme-btn:hover{background:var(--header-btn-bg);filter:brightness(.92)}
+.primary,.app-nav-btn[aria-current="page"],.manage-tabs button[aria-selected="true"],.keep-btn[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--accent-ink)}
+.primary:hover{filter:brightness(.88);background:var(--green)}
+.theme-dialog .theme-field-label{display:block;font-size:13px;font-weight:750;color:var(--ink);margin:12px 0 5px}
+.theme-dialog .theme-text-input,.theme-dialog .theme-textarea,.theme-dialog .theme-select{width:100%;min-width:0;display:block;border:1px solid #b5ccb9;border-radius:10px;padding:10px 12px;font:16px/1.5 inherit;color:var(--ink);background:#fff}
+.theme-dialog .theme-textarea{min-height:68px;resize:vertical}
+.theme-dialog .theme-color-setting{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.theme-dialog .theme-color-setting input[type=color]{width:60px;height:44px;min-width:60px;flex:none;border:1px solid #c8d7ca;border-radius:10px;padding:3px;cursor:pointer}
+.theme-dialog .theme-color-setting output{font:13px ui-monospace,monospace;color:#526859}
+.theme-dialog .theme-design-presets{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0 3px}
+.theme-dialog .theme-design-swatch{width:35px;height:35px;border:2px solid #d3dfd5;border-radius:99px;padding:0}
+.theme-dialog .theme-design-swatch:focus-visible{outline:3px solid #416a55;outline-offset:2px}
+.theme-dialog .theme-save-design{width:100%;margin-top:16px}
+.theme-design-preview{border:1px solid #cddfd1;border-radius:13px;overflow:hidden;margin-top:14px}
+.theme-design-preview-head{padding:17px 14px;min-height:115px;overflow-wrap:anywhere}
+.theme-design-preview-head strong{display:block;font-size:21px;line-height:1.3;white-space:pre-wrap}
+.theme-design-preview-head small{display:block;opacity:.85;font-size:12px;line-height:1.5;margin-top:7px;white-space:pre-wrap}
+.theme-design-preview-foot{background:#fcfdfc;padding:10px 13px;display:flex;justify-content:space-between;align-items:center;gap:9px;color:#52705e;font-size:12px}
+.theme-design-preview-foot span:last-child{padding:8px 11px;border-radius:8px;font-weight:700}
+.theme-dialog hr{border:0;border-top:1px solid #e5ece5;margin:22px 0 15px}
+@media(max-width:420px){.theme-dialog .theme-text-input,.theme-dialog .theme-textarea,.theme-dialog .theme-select{font-size:16px}.theme-dialog .theme-design-swatch{width:37px;height:37px}}
+@media print{header{background-color:white!important;color:black!important}header h1{color:black!important}}
+</style>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#173e2e">
+<meta name="application-name" content="余りもの献立メーカー">
+<link rel="icon" href="./icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+</head>
+<body>
+<header><div class="wrap"><div class="header-tools"><div class="logo">副業実験室 / BETA v0.28</div><button type="button" id="theme-open" class="header-theme-btn" aria-haspopup="dialog" aria-controls="theme-dialog">🎨 見た目設定</button></div><h1 id="app-title">余りもの献立メーカー</h1><p id="app-subtitle">家にある食材から、登録数に合わせて1〜5日分のレシピと買い物リストを作成。</p></div></header>
+<nav class="app-nav" aria-label="画面の切り替え">
+  <div class="app-nav-inner">
+    <button type="button" class="app-nav-btn" data-screen="plan" aria-current="page">🍳 献立を作る</button>
+    <button type="button" class="app-nav-btn" data-screen="browse">📖 レシピを見る</button>
+    <button type="button" class="app-nav-btn" data-screen="register">✏️ レシピを登録</button>
+  </div>
+</nav>
+<main>
+ <section class="app-screen" id="screen-plan" aria-label="献立を作る">
+ <section class="panel form-panel">
+  <div class="form-label" id="choose-label">家にある食材を選ぶ（複数OK）</div>
+  <div class="input-hint">下の食材をタップして選んでください。もう一度押すと解除できます。</div>
+  <div class="picked" id="picked" aria-live="polite"></div>
+  <section class="foods-panel" aria-label="登録済みの食材">
+    <div class="foods-header"><div><strong>登録済みの食材 <span id="food-count"></span></strong><p>タップで追加・解除できます。</p></div><button type="button" class="secondary small" id="toggle-foods" aria-expanded="false" aria-controls="all-foods">すべて見る ▾</button></div>
+    <div id="popular-foods" class="foods-grid"></div>
+    <div id="all-foods" hidden></div>
+  </section>
+  <div id="empty-library" class="notice" hidden><strong>まだ登録されたレシピがありません。</strong><br>「レシピを登録」画面から好きな料理を登録してください。選んだ食材に対応するレシピが1品でもあれば献立を作れます。<br><button type="button" class="secondary small" id="go-manage" style="margin-top:10px">レシピを登録する →</button> <button type="button" class="secondary small" id="go-manual-empty" style="margin-top:10px">レシピを手入力する →</button></div>
+  <div class="selection-actions"><button class="primary" id="make-plan" type="button">献立を作る（キープ維持） →</button><button class="secondary small" id="clear-foods" type="button">食材とキープをすべて解除</button></div>
+  <div class="manual-cta"><span>自分の料理も登録できます</span><button type="button" id="go-manual" class="secondary small">＋ レシピを手入力する</button></div>
+  <div class="notice"><strong>使い方：</strong>一覧から食材を選び「献立を作る」を押します。気に入った献立は「キープ」、変えたい日だけ「別案」や「一覧から選ぶ」で変更できます。上の「献立を作る」でもキープした料理は維持されます。キープを外すには料理の「キープ中」を押してください。買い物リストも自動更新されます。<br>1品から献立を表示します。初期収録は定番27品（各2人分・分量と作り方付き）。写真も1品1枚ずつ追加できます。価格や材料の合計数量は計算しません。</div>
+ </section>
+
+ <div id="message" role="status" aria-live="polite"></div>
+ <div id="result" class="two" hidden>
+   <section class="panel">
+    <div class="topline"><div><h2 id="title-plan">レシピの提案</h2><div id="desc-plan" class="intro"></div></div><button type="button" class="secondary small" id="reroll">キープ以外を組み直す ↻</button></div>
+    <div class="plan-hint">残したい料理は「キープ」。上で食材を追加して「献立を作る」を押しても、キープした料理は残ります。変更するなら「別案」または「一覧から選ぶ」。レシピ一覧から直接キープすることもできます。登録済みが1品だけなら、まずその1品を表示します。</div><div id="coverage" class="coverage" aria-live="polite"></div><div class="cardlist" id="recipes"></div>
+   </section>
+   <aside class="panel shop">
+    <h2>まとめ買いリスト</h2><p class="subhead">表示中の献立で使う材料と調味料を表示します。基本調味料・選んだ食材は最初「家にあるもの」に入り、足りなければ「＋」で戻せます。生姜・にんにく・カレー粉などは買うものに表示されます。生のしょうが・にんにくが家にあれば、おろし用は買い物から自動で外れます（逆は対象外）。</p>
+    <div class="items" id="shopping"></div>
+    <div id="ownedarea" hidden><p class="restored">家にある・買わない材料（足りない場合は「＋」で追加）</p><div id="ownedlist" class="restore-row"></div></div>
+    <div class="btn-group"><button type="button" id="copy" class="primary">残ったリストをコピー</button><button type="button" id="reset" class="secondary">選択した食材を除外し直す</button></div>
+    <div class="warn">※登録済みのレシピを組み合わせるオフライン試作品です。新しいレシピは「レシピを登録」画面から追加できます。各日1品の提案です。分量・人数は登録済みの情報がある場合のみ表示。材料の合計必要量や、使い切り量・栄養バランスは計算していません。</div>
+   </aside>
+ </div>
+ </section>
+ <section class="app-screen" id="screen-browse" aria-label="レシピを見る" hidden>
+   <div class="screen-heading"><div><h2>レシピを見る <span class="muted" id="browse-total">（0品）</span></h2><p>料理名や材料で検索できます。気に入った料理はここから献立にキープできます。</p></div><button type="button" id="browse-add-new" class="secondary small">＋ レシピを登録</button></div>
+ <details class="panel browse-panel" id="browse-panel" open>
+   <summary>レシピ一覧</summary>
+   <div class="browse-inner">
+     <p class="muted">定番レシピと自分で追加した料理を一覧できます。料理を開いて「☆ 献立にキープ」を押すと、そのまま献立に固定できます。</p>
+     <div class="browse-tools">
+       <div class="browse-search">
+         <input id="browse-query" type="search" enterkeyhint="search" autocomplete="off" placeholder="料理名・食材（例：たまご）" aria-label="料理名・食材で検索">
+         <button type="button" id="browse-search-submit" class="primary" aria-controls="browse-list">検索</button>
+       </div>
+       <select id="browse-kind" aria-label="主菜・副菜で絞る">
+         <option value="all">主菜・副菜すべて</option>
+         <option value="main">主菜のみ</option>
+         <option value="side">副菜のみ</option>
+       </select>
+       <select id="browse-origin" aria-label="レシピの登録元で絞る">
+         <option value="all">すべてのレシピ</option>
+         <option value="personal">追加したレシピ</option>
+       </select>
+     </div>
+     <div class="browse-status" id="browse-status" aria-live="polite"></div>
+     <div class="browse-list" id="browse-list"></div>
+     <button type="button" id="browse-more" class="secondary browse-more" hidden>さらに20品を見る ↓</button>
+   </div>
+ </details>
+   <details class="panel personal-tools" id="personal-tools">
+     <summary>バックアップ・追加レシピの削除や編集 ▾</summary>
+    <section class="manage-tab-body" id="manage-tab-library">
+      <div class="manage-buttons"><button class="secondary" id="export-json" type="button">レシピをバックアップ（JSON保存）</button></div>
+      <p class="manage-help">追加・編集したレシピと写真は端末内への自動保存を試みますが、HTMLをローカルで開く場合などは消えることがあります。端末変更やバージョン更新の前に、必ずJSONをバックアップしてください。写真と見た目設定もバックアップに含まれます。</p>
+    <h3>登録したレシピ <span id="mine-count">（0品）</span></h3>
+    <div class="mine-list" id="mine-list"><div class="muted">まだレシピはありません。</div></div>
+      <p class="manage-help">初期収録レシピも、上のレシピ一覧から編集できます。</p>
+    </section>   </details>
+ </section>
+ <section class="app-screen" id="screen-register" aria-label="レシピを登録" hidden>
+   <div class="screen-heading"><div><h2>レシピを登録</h2><p>JSON取込と手入力を切り替えられます。</p></div><button type="button" id="register-see-recipes" class="secondary small">レシピ一覧を見る →</button></div>
+ <details class="panel manage-panel" id="manage-panel" open>
+  <summary>レシピを登録する</summary>
+  <div class="manage-inner">
+    <p class="manage-help">JSONを取り込むか、材料と作り方を手入力して登録できます。</p>
+    <div class="manage-tabs" id="manage-tabs" role="tablist" aria-label="レシピ登録の方法">
+      <button id="tab-json" type="button" role="tab" aria-selected="true" aria-controls="manage-tab-json" data-manage-tab="json">JSON取込</button>
+      <button id="tab-manual" type="button" role="tab" aria-selected="false" aria-controls="manage-tab-manual" data-manage-tab="manual">手入力</button>
+    </div>
+    <div class="manage-status" id="manage-status" role="status" aria-live="polite">保存状況を確認中…</div>
+    <section class="manage-tab-body" id="manage-tab-json" role="tabpanel" aria-labelledby="tab-json">
+      <p class="manage-help">AIで作ったJSONを貼り付けるか、JSONファイルを選んで登録できます。重複やエラーは取込後のポップアップで確認できます。</p>
+    <label for="recipe-json">追加レシピ（JSON配列・従来形式も可）</label>
+    <textarea id="recipe-json" spellcheck="false" placeholder='[{"name":"鶏ももと舞茸の炒め物","type":"main","ingredients":["鶏もも肉","舞茸"],"steps":"鶏肉を焼き、舞茸を加えて炒める。","source_url":""}]'></textarea>
+    <div class="manage-buttons">
+      <button class="primary" id="import-recipes" type="button">JSONを取り込む</button>
+      <label class="file-label" for="json-file">JSONファイルを選択 <input id="json-file" type="file" accept=".json,application/json"></label>
+    </div>
+      <p class="manage-help">登録した料理は上の「レシピを見る」画面から確認・編集できます。</p>
+    </section>
+    <section class="manage-tab-body" id="manage-tab-manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
+    <div id="manual-entry-anchor" class="manual-intro"><strong>料理名・食材・作り方を直接入力して登録</strong><p>JSONがなくても大丈夫。材料は読点（、）区切りで入力。何人前・分量・元URLは任意です。</p></div>
+    <div class="edit-head"><h3 id="edit-title">レシピを手入力</h3><button type="button" class="secondary" id="clear-editor">入力をリセット</button></div>
+    <div class="edit-grid">
+      <div class="full"><label for="edit-name">料理名</label><input id="edit-name" maxlength="70" placeholder="例：舞茸と鶏ももの炒め物"></div>
+      <div><label for="edit-type">種類</label><select id="edit-type"><option value="main">主菜</option><option value="side">副菜</option></select></div>
+      <div><label for="edit-ingredients">食材（読点・カンマ・改行区切り）</label><input id="edit-ingredients" placeholder="鶏もも肉、舞茸、玉ねぎ"></div>
+      <div><label for="edit-servings">何人前（分かるときだけ）</label><input id="edit-servings" type="number" min="1" max="30" step="1" placeholder="例：2"></div>
+      <div class="full"><label for="edit-amounts">材料の分量（1行に「材料名：分量」／調味料も記載可）</label><textarea id="edit-amounts" class="editor-amounts" placeholder="鶏もも肉：200g
+舞茸：1パック
+しょうゆ：大さじ1"></textarea><p class="manage-help">記載がない材料は分量未設定のまま保存します。調味料もここに入力すると買い物リストに反映します。水は除外し、砂糖・塩・醤油などの基本調味料は「家にある」側に入ります。</p></div>
+      <div class="full"><label for="edit-steps">簡単な作り方</label><textarea id="edit-steps" class="editor-steps" placeholder="調理手順を自分の言葉で簡潔に"></textarea></div>
+      <div class="full"><label for="edit-url">元レシピのURL（任意）</label><input id="edit-url" type="url" placeholder="https://..."></div>
+      <div class="full"><label for="edit-photo">料理写真（任意・自分で撮った写真など）</label><div class="photo-upload"><input id="edit-photo" type="file" accept="image/*"><p class="manage-help">選んだ写真は端末上で小さなJPEG画像に変換し、レシピに保存します。外部サイトの画像は自動で取得しません。</p><div id="photo-preview" class="photo-preview" hidden><img id="photo-preview-img" alt="登録する写真のプレビュー"><button type="button" class="secondary" id="remove-photo">写真を外す</button></div><p class="muted" id="photo-status" aria-live="polite">写真なし</p></div></div>
+    </div>
+    <div class="edit-notice" id="edit-mode-note" aria-live="polite"></div><div class="manage-buttons"><button type="button" id="save-one" class="primary">レシピを保存する</button><button type="button" id="cancel-edit" class="secondary" hidden>編集を取り消す</button><button type="button" id="restore-base" class="secondary danger-button" hidden>初期状態に戻す</button></div>
+    <p class="manage-help">初期収録の定番27品にも写真を追加できます（初期状態に戻すと写真も外れます）。追加レシピは編集・削除できます。旧版で追加したレシピを移す場合は、JSON取込からバックアップを読み込んでください。</p>
+    </section>
+
+  </div>
+ </details>
+
+ <details class="panel stash-panel" id="stash-panel" hidden>
+  <summary>予備レシピから選んで追加する <span class="muted" id="stock-total">（0品）</span></summary>
+  <div class="stash-inner">
+    <p class="muted">147品は本体に用意されていますが、<strong>選ぶまでは献立・食材の候補には出ません。</strong> 気になるものだけ追加してください。初期レシピは人数・分量が未設定です。追加後に編集して使えます。</p>
+    <div class="stash-filter">
+      <input id="stock-query" type="search" placeholder="料理名・食材で検索（例：キャベツ）" aria-label="予備レシピを検索">
+      <select id="stock-kind" aria-label="予備レシピの種類"><option value="all">主菜・副菜すべて</option><option value="main">主菜</option><option value="side">副菜</option></select>
+    </div>
+    <div class="stash-bar">
+      <span id="stock-status" class="muted" aria-live="polite"></span>
+      <button type="button" class="primary small" id="stock-add-selected" disabled>選択した0品を登録</button>
+    </div>
+    <div id="stock-list" class="stash-list"></div>
+    <button type="button" id="stock-more" class="secondary browse-more" hidden>さらに20品を見る ↓</button>
+    <p class="muted">追加したレシピは「レシピを見る」画面から編集・削除できます。削除しても予備レシピから再追加できます。公開・販売前には予備レシピの内容と出典も確認してください。</p>
+  </div>
+ </details>
+ </section>
+</main>
+<dialog id="import-result-dialog" class="import-dialog" aria-labelledby="import-result-title" aria-describedby="import-result-description">
+ <div class="import-dialog-body">
+  <h2 id="import-result-title">レシピを取り込みました</h2>
+  <p id="import-result-description"></p>
+  <div id="import-result-counts" class="import-counts"></div>
+  <div id="import-result-names" hidden><h3>追加したレシピ</h3><ul id="import-result-list"></ul></div>
+  <div id="import-result-details" class="import-detail" hidden></div>
+  <div class="import-dialog-actions"><button type="button" id="import-result-close" class="primary">閉じる</button></div>
+ </div>
+</dialog>
+<dialog id="browse-pin-dialog" class="pin-dialog" aria-labelledby="browse-pin-title" aria-describedby="browse-pin-intro">
+ <div class="pin-dialog-body">
+  <h2 id="browse-pin-title">献立にキープ</h2>
+  <p id="browse-pin-intro">このレシピを固定する日を選んでください。</p>
+  <div id="browse-pin-slots" class="pin-slot-list"></div>
+  <p>キープした料理は「献立を作る」で組み直しても残ります。すでにキープ中の日を選ぶ場合は、入れ替えの確認が出ます。</p>
+  <button type="button" id="browse-pin-cancel" class="secondary pin-dialog-close">キャンセル</button>
+ </div>
+</dialog>
+<dialog id="theme-dialog" class="theme-dialog" aria-labelledby="theme-title">
+ <div class="theme-dialog-body">
+  <h2 id="theme-title">🎨 見た目をカスタマイズ</h2>
+  <p>タイトル・色・フォント・背景を変更できます。レシピや献立の内容は変わりません。</p>
+  <h3>アプリのタイトル</h3>
+  <label class="theme-field-label" for="theme-app-title">表示するタイトル</label>
+  <input type="text" class="theme-text-input" id="theme-app-title" maxlength="48" placeholder="余りもの献立メーカー" autocomplete="off">
+  <label class="theme-field-label" for="theme-app-subtitle">タイトル下の説明文</label>
+  <textarea class="theme-textarea" id="theme-app-subtitle" maxlength="120" rows="2" placeholder="アプリの説明"></textarea>
+  <h3>ヘッダー・ボタンの色</h3>
+  <label class="theme-field-label" for="theme-header-color">上のヘッダー色</label>
+  <div class="theme-color-setting"><input id="theme-header-color" type="color" value="#173e2e"><output id="theme-header-code" for="theme-header-color">#173e2e</output></div>
+  <div class="theme-design-presets" aria-label="ヘッダー色の例">
+    <button type="button" class="theme-design-swatch" data-design-target="theme-header-color" data-design-color="#173e2e" style="background:#173e2e" aria-label="深緑" title="深緑"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-header-color" data-design-color="#2b4a75" style="background:#2b4a75" aria-label="紺" title="紺"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-header-color" data-design-color="#6a425d" style="background:#6a425d" aria-label="赤紫" title="赤紫"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-header-color" data-design-color="#77523a" style="background:#77523a" aria-label="茶" title="茶"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-header-color" data-design-color="#e9d4aa" style="background:#e9d4aa" aria-label="明るいベージュ" title="明るいベージュ"></button>
+  </div>
+  <label class="theme-field-label" for="theme-accent-color">ボタンなどのアクセント色</label>
+  <div class="theme-color-setting"><input id="theme-accent-color" type="color" value="#226047"><output id="theme-accent-code" for="theme-accent-color">#226047</output></div>
+  <div class="theme-design-presets" aria-label="ボタン色の例">
+    <button type="button" class="theme-design-swatch" data-design-target="theme-accent-color" data-design-color="#226047" style="background:#226047" aria-label="緑" title="緑"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-accent-color" data-design-color="#355da3" style="background:#355da3" aria-label="青" title="青"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-accent-color" data-design-color="#985477" style="background:#985477" aria-label="ピンク" title="ピンク"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-accent-color" data-design-color="#a96336" style="background:#a96336" aria-label="オレンジ" title="オレンジ"></button>
+    <button type="button" class="theme-design-swatch" data-design-target="theme-accent-color" data-design-color="#e4d1a2" style="background:#e4d1a2" aria-label="薄茶" title="薄茶"></button>
+  </div>
+  <label class="theme-field-label" for="theme-font">フォント</label>
+  <select class="theme-select" id="theme-font">
+   <option value="system">標準（おすすめ）</option>
+   <option value="gothic">ゴシック</option>
+   <option value="rounded">丸ゴシック</option>
+   <option value="serif">明朝</option>
+   <option value="casual">やわらかめ</option>
+  </select>
+  <p>フォントは端末にあるものを使います。機種によって見た目が近くなることがあります（オフライン対応）。</p>
+  <div class="theme-design-preview" aria-label="見た目のプレビュー">
+   <div class="theme-design-preview-head" id="theme-design-preview-head"><strong id="theme-preview-title">余りもの献立メーカー</strong><small id="theme-preview-subtitle">家にある食材から献立を作成。</small></div>
+   <div class="theme-design-preview-foot"><span>設定のプレビュー</span><span id="theme-preview-button">🍳 献立を作る</span></div>
+  </div>
+  <button type="button" class="primary theme-save-design" id="theme-save-design">タイトル・色・フォントを保存して反映</button>
+  <hr>
+  <h3>背景色</h3>
+  <div class="theme-color-row"><label for="theme-color" class="muted">好きな色を選ぶ</label><input id="theme-color" type="color" value="#f5f8f4"><span class="theme-color-code" id="theme-color-code">#f5f8f4</span><button type="button" class="secondary small" id="theme-use-color">この色にする</button></div>
+  <div class="theme-presets" aria-label="背景色の例">
+   <button type="button" class="theme-preset" data-theme-color="#f5f8f4" style="background:#f5f8f4" aria-label="薄い緑" title="薄い緑"></button>
+   <button type="button" class="theme-preset" data-theme-color="#fff3e9" style="background:#fff3e9" aria-label="あたたかいベージュ" title="あたたかいベージュ"></button>
+   <button type="button" class="theme-preset" data-theme-color="#f0efff" style="background:#f0efff" aria-label="淡いラベンダー" title="淡いラベンダー"></button>
+   <button type="button" class="theme-preset" data-theme-color="#e7f2ff" style="background:#e7f2ff" aria-label="淡い水色" title="淡い水色"></button>
+   <button type="button" class="theme-preset" data-theme-color="#ece7dc" style="background:#ece7dc" aria-label="グレージュ" title="グレージュ"></button>
+  </div>
+  <h3>写真を背景にする</h3>
+  <input id="theme-photo" class="theme-photo-input" type="file" accept="image/*" aria-label="背景にする写真を選択">
+  <p>端末の画像を縮小して保存します。写真の上でも文字が読みやすいように、白いパネルは残します。</p>
+  <div id="theme-photo-preview" class="theme-photo-preview" hidden><img id="theme-preview-image" alt="背景に設定した写真のプレビュー"><span>背景用の写真を保存しています</span></div>
+  <div class="theme-photo-buttons"><button type="button" id="theme-use-photo" class="secondary small" hidden>保存した写真を背景にする</button><button type="button" id="theme-remove-photo" class="secondary small" hidden>写真を外す</button></div>
+  <div id="theme-status" class="theme-status" role="status" aria-live="polite">見た目設定を読み込み中…</div>
+  <div class="theme-dialog-actions"><button type="button" id="theme-reset" class="secondary small">見た目をすべて初期化</button><button type="button" id="theme-close" class="primary">閉じる</button></div>
+  <p style="margin-top:15px">※オフラインで使えます。端末やHTMLファイルを変えると設定が引き継がれないことがあるため、レシピのJSONバックアップに背景設定も含めています。</p>
+ </div>
+</dialog>
+<footer>余りもの献立メーカー v0.28 — 定番レシピ試験版</footer>
+<script>
+const BASE_RECIPES=[{"name":"豚こまのしょうが焼き","type":"main","ingredients":["豚こま肉","玉ねぎ"],"servings":2,"amounts":{"豚こま肉":"250g","玉ねぎ":"1/2個","しょうが":"1かけ（すりおろす）","しょうゆ":"大さじ1と1/2","みりん":"大さじ1","酒":"大さじ1","油":"小さじ1"},"steps":"①玉ねぎを薄切りにする。②油を熱して豚肉と玉ねぎを炒め、肉にしっかり火を通す。③しょうが・しょうゆ・みりん・酒を加え、汁気が少なくなるまで絡める。","source_url":""},{"name":"鶏もも肉の照り焼き","type":"main","ingredients":["鶏もも肉"],"servings":2,"amounts":{"鶏もも肉":"1枚（約300g）","しょうゆ":"大さじ1と1/2","みりん":"大さじ1と1/2","酒":"大さじ1","砂糖":"小さじ1"},"steps":"①鶏肉の厚い部分を開き、皮側からフライパンで焼く。②裏返してふたをし、中まで十分に火を通す。③余分な脂を拭き、調味料を加えて煮絡める。","source_url":""},{"name":"親子丼","type":"main","ingredients":["鶏もも肉","卵","玉ねぎ","ご飯"],"servings":2,"amounts":{"鶏もも肉":"200g","卵":"3個","玉ねぎ":"1/2個","ご飯":"茶碗2杯","だし汁":"150ml","しょうゆ":"大さじ2","みりん":"大さじ2","砂糖":"小さじ1"},"steps":"①薄切り玉ねぎと小さく切った鶏肉を、だし汁・調味料で煮る。②鶏肉に十分火が通ったら溶き卵を回し入れ、好みの固さに加熱する。③温かいご飯にのせる。","source_url":""},{"name":"豚肉とキャベツのみそ炒め","type":"main","ingredients":["豚こま肉","キャベツ","ピーマン"],"servings":2,"amounts":{"豚こま肉":"200g","キャベツ":"200g","ピーマン":"2個","みそ":"大さじ1と1/2","みりん":"大さじ1","酒":"大さじ1","油":"小さじ1"},"steps":"①キャベツとピーマンを食べやすく切る。②フライパンで豚肉を炒め、火が通ったら野菜を加える。③みそ・みりん・酒を混ぜて加え、全体に絡める。","source_url":""},{"name":"肉じゃが","type":"main","ingredients":["豚こま肉","じゃがいも","玉ねぎ","にんじん"],"servings":2,"amounts":{"豚こま肉":"150g","じゃがいも":"2個","玉ねぎ":"1/2個","にんじん":"1/2本","水":"250ml","しょうゆ":"大さじ2","みりん":"大さじ2","砂糖":"大さじ1"},"steps":"①野菜を一口大に切る。②鍋で肉を軽く炒めて野菜と水を加え、柔らかくなるまで煮る。③調味料を加え、味がなじむまで煮る。","source_url":""},{"name":"鶏むね肉としめじの塩炒め","type":"main","ingredients":["鶏むね肉","しめじ","長ねぎ"],"servings":2,"amounts":{"鶏むね肉":"250g","しめじ":"1パック","長ねぎ":"1/2本","酒":"大さじ1","塩":"小さじ1/3","こしょう":"少々","ごま油":"小さじ2"},"steps":"①鶏肉を薄めの一口大に切り、酒をもみ込む。②ごま油で鶏肉を炒めて十分火を通す。③しめじと斜め切りの長ねぎを加え、塩・こしょうで仕上げる。","source_url":""},{"name":"ひき肉の和風ハンバーグ","type":"main","ingredients":["豚ひき肉","玉ねぎ","卵","パン粉"],"servings":2,"amounts":{"豚ひき肉":"250g","玉ねぎ":"1/4個","卵":"1個","パン粉":"大さじ3","塩":"小さじ1/4","こしょう":"少々","油":"小さじ1","しょうゆ":"大さじ1","みりん":"大さじ1"},"steps":"①玉ねぎをみじん切りにし、ひき肉・卵・パン粉・塩こしょうと混ぜる。②2等分に丸め、油を熱したフライパンで両面を焼く。③ふたをして中まで十分に火を通し、しょうゆ・みりんを加えて軽く煮詰める。","source_url":""},{"name":"定番の野菜炒め","type":"main","ingredients":["豚こま肉","キャベツ","もやし","にんじん"],"servings":2,"amounts":{"豚こま肉":"150g","キャベツ":"150g","もやし":"1/2袋","にんじん":"1/3本","しょうゆ":"大さじ1","酒":"大さじ1","塩・こしょう":"各少々","油":"小さじ2"},"steps":"①野菜を食べやすく切る。②フライパンで肉を炒めて火を通し、にんじん・キャベツ・もやしの順に加える。③調味料を加えて手早く炒め合わせる。","source_url":""},{"name":"鶏肉と玉ねぎのカレー炒め","type":"main","ingredients":["鶏もも肉","玉ねぎ","ピーマン"],"servings":2,"amounts":{"鶏もも肉":"250g","玉ねぎ":"1個","ピーマン":"2個","カレー粉":"小さじ2","しょうゆ":"小さじ2","塩":"少々","油":"小さじ1"},"steps":"①鶏肉と野菜を食べやすく切る。②鶏肉を炒めてしっかり火を通し、玉ねぎ・ピーマンを加える。③カレー粉としょうゆを絡め、塩で調える。","source_url":""},{"name":"豚丼","type":"main","ingredients":["豚こま肉","玉ねぎ","ご飯"],"servings":2,"amounts":{"豚こま肉":"220g","玉ねぎ":"1/2個","ご飯":"茶碗2杯","水":"100ml","しょうゆ":"大さじ2","みりん":"大さじ2","砂糖":"小さじ2"},"steps":"①玉ねぎを薄切りにする。②鍋に水と調味料を煮立て、玉ねぎと豚肉を入れ、肉に十分火が通るまで煮る。③ご飯にのせる。","source_url":""},{"name":"オムライス","type":"main","ingredients":["ご飯","卵","玉ねぎ","ウインナー"],"servings":2,"amounts":{"ご飯":"茶碗2杯","卵":"3個","玉ねぎ":"1/2個","ウインナー":"4本","ケチャップ":"大さじ4","牛乳":"大さじ1","塩・こしょう":"各少々","油":"小さじ2"},"steps":"①刻んだ玉ねぎとウインナーを炒め、ご飯・ケチャップ・塩こしょうを加えて混ぜる。②卵に牛乳を加えて溶く。③別のフライパンで卵を好みの固さに焼き、ケチャップご飯の上にのせる。","source_url":""},{"name":"厚揚げと豚ひき肉の甘辛煮","type":"main","ingredients":["厚揚げ","豚ひき肉","長ねぎ"],"servings":2,"amounts":{"厚揚げ":"1枚（約200g）","豚ひき肉":"150g","長ねぎ":"1/2本","水":"150ml","しょうゆ":"大さじ1と1/2","みりん":"大さじ1","砂糖":"小さじ1"},"steps":"①厚揚げを一口大に、長ねぎを斜め切りにする。②鍋でひき肉を炒め、色が変わったら厚揚げ・水・調味料を加える。③ひき肉に十分火が通るまで煮て、長ねぎを加えさらに煮る。","source_url":""},{"name":"鮭ときのこのホイル焼き","type":"main","ingredients":["鮭","しめじ","玉ねぎ"],"servings":2,"amounts":{"鮭":"切り身2切れ","しめじ":"1/2パック","玉ねぎ":"1/2個","バター":"10g","塩・こしょう":"各少々","しょうゆ":"小さじ2"},"steps":"①アルミホイル2枚に薄切り玉ねぎ・鮭・しめじを分けてのせる。②塩こしょうとバターを加えて包み、フライパンに並べ少量の水を加えてふたをする。③弱めの中火で蒸し焼きにし、鮭に十分火が通ったらしょうゆをたらす。","source_url":""},{"name":"ツナとキャベツの卵炒め","type":"main","ingredients":["ツナ缶","キャベツ","卵"],"servings":2,"amounts":{"ツナ缶":"1缶","キャベツ":"200g","卵":"2個","しょうゆ":"小さじ2","塩・こしょう":"各少々","油":"小さじ1"},"steps":"①キャベツをざく切りにする。②フライパンでキャベツとツナを炒める。③溶き卵を加えて火を通し、しょうゆ・塩こしょうで味を調える。","source_url":""},{"name":"焼きうどん","type":"main","ingredients":["ゆでうどん","豚こま肉","キャベツ","玉ねぎ"],"servings":2,"amounts":{"ゆでうどん":"2玉","豚こま肉":"120g","キャベツ":"120g","玉ねぎ":"1/2個","しょうゆ":"大さじ1と1/2","酒":"大さじ1","油":"小さじ2"},"steps":"①豚肉と切った野菜を炒め、肉にしっかり火を通す。②うどんと少量の水を加え、ほぐしながら炒める。③しょうゆ・酒を絡める。","source_url":""},{"name":"ナポリタン","type":"main","ingredients":["パスタ","玉ねぎ","ピーマン","ウインナー"],"servings":2,"amounts":{"パスタ":"180g","玉ねぎ":"1/2個","ピーマン":"2個","ウインナー":"4本","ケチャップ":"大さじ5","バター":"10g","塩・こしょう":"各少々"},"steps":"①パスタを表示どおりにゆでる。②バターで薄切り玉ねぎ・ピーマン・ウインナーを炒める。③ケチャップとパスタを加えて炒め合わせ、塩こしょうで調える。","source_url":""},{"name":"鶏むね肉の照り焼き","type":"main","ingredients":["鶏むね肉","玉ねぎ"],"servings":2,"amounts":{"鶏むね肉":"250g","玉ねぎ":"1/2個","片栗粉":"大さじ1","しょうゆ":"大さじ1と1/2","みりん":"大さじ1","砂糖":"小さじ1","油":"小さじ2"},"steps":"①鶏むね肉を薄めのそぎ切りにし、薄く片栗粉をまぶす。②玉ねぎと鶏肉をフライパンで焼き、中まで十分に火を通す。③しょうゆ・みりん・砂糖を加えて照りが出るまで絡める。","source_url":""},{"name":"厚揚げとキャベツのみそ炒め","type":"main","ingredients":["厚揚げ","キャベツ","玉ねぎ"],"servings":2,"amounts":{"厚揚げ":"1枚（約200g）","キャベツ":"200g","玉ねぎ":"1/2個","みそ":"大さじ1と1/2","みりん":"大さじ1","水":"大さじ2","油":"小さじ1"},"steps":"①厚揚げは一口大、野菜は食べやすく切る。②フライパンで厚揚げと玉ねぎを焼き、キャベツを加える。③みそ・みりん・水を混ぜて加え、全体に絡める。","source_url":""},{"name":"卵焼き","type":"side","ingredients":["卵"],"servings":2,"amounts":{"卵":"3個","砂糖":"小さじ2","しょうゆ":"小さじ1/2","水":"大さじ1","油":"適量"},"steps":"①卵を溶いて調味料と水を混ぜる。②卵焼き器に薄く油をひき、卵液を数回に分けて流して巻く。③中心まで火を通し、少し冷まして切る。","source_url":""},{"name":"ほうれん草のおひたし","type":"side","ingredients":["ほうれん草"],"servings":2,"amounts":{"ほうれん草":"1束（約200g）","しょうゆ":"小さじ2","かつお節":"適量"},"steps":"①ほうれん草をよく洗い、沸騰した湯でさっとゆでる。②冷水にとって水気を絞り、食べやすく切る。③しょうゆとかつお節をかける。","source_url":""},{"name":"もやしのナムル","type":"side","ingredients":["もやし"],"servings":2,"amounts":{"もやし":"1袋（約200g）","ごま油":"小さじ2","しょうゆ":"小さじ1","塩":"少々","白ごま":"小さじ1"},"steps":"①もやしをゆでて十分に火を通す。②水気をよく切る。③ごま油・しょうゆ・塩・白ごまで和える。","source_url":""},{"name":"にんじんのきんぴら","type":"side","ingredients":["にんじん"],"servings":2,"amounts":{"にんじん":"1本","しょうゆ":"小さじ2","みりん":"小さじ2","ごま油":"小さじ1"},"steps":"①にんじんを細切りにする。②ごま油で炒め、しんなりしたらしょうゆ・みりんを加える。③汁気が少なくなるまで炒め合わせる。","source_url":""},{"name":"キャベツとツナの和え物","type":"side","ingredients":["キャベツ","ツナ缶"],"servings":2,"amounts":{"キャベツ":"200g","ツナ缶":"1缶","ポン酢":"大さじ1と1/2","こしょう":"少々"},"steps":"①キャベツを細切りにし、電子レンジ等で加熱して冷ます。②水気を軽く絞り、汁気を切ったツナと和える。③ポン酢とこしょうを加える。","source_url":""},{"name":"小松菜と油揚げの煮びたし","type":"side","ingredients":["小松菜","油揚げ"],"servings":2,"amounts":{"小松菜":"1/2束（約120g）","油揚げ":"1枚","だし汁":"150ml","しょうゆ":"小さじ2","みりん":"小さじ2"},"steps":"①小松菜を3〜4cm幅に切り、油揚げを短冊切りにする。②鍋にだし汁と調味料を煮立て、油揚げと小松菜を入れる。③しんなりするまで煮る。","source_url":""},{"name":"冷ややっこ","type":"side","ingredients":["木綿豆腐","長ねぎ"],"servings":2,"amounts":{"木綿豆腐":"1丁（約300g）","長ねぎ":"少量","しょうゆ":"適量","しょうが":"好みで少量"},"steps":"①豆腐を2つに切って器に盛る。②長ねぎを小口切りにする。③ねぎと好みでしょうがをのせ、しょうゆをかける。","source_url":""},{"name":"じゃがいもと玉ねぎのみそ汁","type":"side","ingredients":["じゃがいも","玉ねぎ"],"servings":2,"amounts":{"じゃがいも":"1個","玉ねぎ":"1/4個","だし汁":"400ml","みそ":"大さじ1と1/2"},"steps":"①じゃがいもを薄めの一口大に、玉ねぎを薄切りにする。②だし汁で野菜が柔らかくなるまで煮る。③火を弱め、みそを溶き入れる。","source_url":""},{"name":"ブロッコリーのごま和え","type":"side","ingredients":["ブロッコリー"],"servings":2,"amounts":{"ブロッコリー":"1/2株","白すりごま":"大さじ1","しょうゆ":"小さじ2","砂糖":"小さじ1"},"steps":"①ブロッコリーを小房に分け、柔らかくなるまでゆでる。②水気をしっかり切る。③白すりごま・しょうゆ・砂糖を混ぜて和える。","source_url":""}]; // 出典を要しない一般的な定番料理。独自表現で作成した試作レシピ（未実食検証）
+const STOCK_RECIPES=[]; // 旧版の予備147品は除外
+const $=id=>document.getElementById(id);
+// v0.25: personal appearance settings (one stable key across future versions).
+const THEME_KEY='yomarimono_appearance_v1';
+const THEME_DEFAULT={color:'#f5f8f4',mode:'color',photo:'',headerColor:'#173e2e',accentColor:'#226047',title:'余りもの献立メーカー',subtitle:'家にある食材から、登録数に合わせて1〜5日分のレシピと買い物リストを作成。',font:'system'};
+const FONT_CHOICES={
+ system:'-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif',
+ gothic:'"Noto Sans JP","Noto Sans CJK JP","Hiragino Kaku Gothic ProN",sans-serif',
+ rounded:'"Noto Sans Rounded","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif',
+ serif:'"Noto Serif JP","Noto Serif CJK JP","Yu Mincho",serif',
+ casual:'"Hiragino Maru Gothic ProN","Comic Sans MS",cursive'
+};
+function isLightThemeColor(hex){
+ const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(x=>x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4));
+ return c[0]*.2126+c[1]*.7152+c[2]*.0722>.33;
+}
+function asRgba(hex,opacity){const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));return `rgba(${c.join(',')},${opacity})`}
+function themeTextColor(hex){return isLightThemeColor(hex)?'#233329':'#ffffff'}
+let themeSettings={...THEME_DEFAULT};
+let themeLoading=false;
+function validatedTheme(raw){
+ if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('背景データの形式が正しくありません');
+ const color=(typeof raw.color==='string'&&/^#[a-f0-9]{6}$/i.test(raw.color))?raw.color.toLowerCase():THEME_DEFAULT.color;
+ const photo=(typeof raw.photo==='string'&&/^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(raw.photo)&&raw.photo.length<700000)?raw.photo:'';
+ const mode=(raw.mode==='photo'&&photo)?'photo':'color';
+ const goodColor=x=>typeof x==='string'&&/^#[a-f0-9]{6}$/i.test(x);
+ const headerColor=goodColor(raw.headerColor)?raw.headerColor.toLowerCase():THEME_DEFAULT.headerColor;
+ const accentColor=goodColor(raw.accentColor)?raw.accentColor.toLowerCase():THEME_DEFAULT.accentColor;
+ const title=typeof raw.title==='string'?raw.title.trim().slice(0,48)||THEME_DEFAULT.title:THEME_DEFAULT.title;
+ const subtitle=typeof raw.subtitle==='string'?raw.subtitle.slice(0,120):THEME_DEFAULT.subtitle;
+ const font=Object.prototype.hasOwnProperty.call(FONT_CHOICES,raw.font)?raw.font:THEME_DEFAULT.font;
+ return {color,mode,photo,headerColor,accentColor,title,subtitle,font};
+}
+function setThemeMessage(message,error=false){
+ $('theme-status').textContent=message;
+ $('theme-status').classList.toggle('error',error);
+}
+function applyTheme(){
+ const theme=themeSettings;
+ const root=document.documentElement;
+ root.style.setProperty('--bg',theme.color);
+ root.style.setProperty('--header-bg',theme.headerColor);
+ root.style.setProperty('--green',theme.accentColor);
+ root.style.setProperty('--header-ink',themeTextColor(theme.headerColor));
+ root.style.setProperty('--header-sub',isLightThemeColor(theme.headerColor)?'#365443':'#e0f1e5');
+ root.style.setProperty('--header-logo',isLightThemeColor(theme.headerColor)?'#42634b':'#b7d6c2');
+ root.style.setProperty('--header-btn-bg',isLightThemeColor(theme.headerColor)?'rgba(0,0,0,.08)':'rgba(255,255,255,.12)');
+ root.style.setProperty('--header-btn-border',isLightThemeColor(theme.headerColor)?'rgba(0,0,0,.35)':'rgba(255,255,255,.42)');
+ root.style.setProperty('--accent-ink',themeTextColor(theme.accentColor));
+ root.style.setProperty('--app-font',FONT_CHOICES[theme.font]);
+ $('app-title').textContent=theme.title;
+ $('app-subtitle').textContent=theme.subtitle;
+ document.title=theme.title+' | v0.28';
+ const hasPhoto=theme.mode==='photo'&&!!theme.photo;
+ document.body.classList.toggle('has-bg-photo',hasPhoto);
+ if(hasPhoto){
+  // Photo is locally generated JPEG data (not an external URL).
+  const url=`url("${theme.photo}")`;
+  document.body.style.backgroundImage=`linear-gradient(rgba(246,249,246,.18),rgba(246,249,246,.18)), ${url}`;
+  document.body.style.backgroundPosition='center center';
+  document.body.style.backgroundSize='cover';
+  document.body.style.backgroundAttachment='fixed';
+  const overlay=asRgba(theme.headerColor,.87);
+  document.querySelector('header').style.backgroundImage=`linear-gradient(${overlay},${overlay}), ${url}`;
+  document.querySelector('header').style.backgroundSize='cover';
+  document.querySelector('header').style.backgroundPosition='center';
+ }else{
+  document.body.style.removeProperty('background-image');
+  document.body.style.removeProperty('background-position');
+  document.body.style.removeProperty('background-size');
+  document.body.style.removeProperty('background-attachment');
+  document.querySelector('header').style.removeProperty('background-image');
+  document.querySelector('header').style.removeProperty('background-size');
+  document.querySelector('header').style.removeProperty('background-position');
+ }
+ $('theme-color').value=theme.color;
+ $('theme-color-code').textContent=theme.color;
+ $('theme-photo-preview').hidden=!theme.photo;
+ $('theme-use-photo').hidden=!theme.photo||hasPhoto;
+ $('theme-remove-photo').hidden=!theme.photo;
+ if(theme.photo)$('theme-preview-image').src=theme.photo;
+ else $('theme-preview-image').removeAttribute('src');
+ document.querySelectorAll('[data-theme-color]').forEach(b=>b.setAttribute('aria-pressed',String(theme.mode==='color'&&b.dataset.themeColor===theme.color)));
+}
+function fillDesignForm(){
+ const t=themeSettings;
+ $('theme-app-title').value=t.title;
+ $('theme-app-subtitle').value=t.subtitle;
+ $('theme-header-color').value=t.headerColor;
+ $('theme-accent-color').value=t.accentColor;
+ $('theme-font').value=t.font;
+ updateDesignPreview();
+}
+function updateDesignPreview(){
+ const title=$('theme-app-title').value.trim()||THEME_DEFAULT.title;
+ const subtitle=$('theme-app-subtitle').value;
+ const header=$('theme-header-color').value;
+ const accent=$('theme-accent-color').value;
+ const font=FONT_CHOICES[$('theme-font').value]||FONT_CHOICES.system;
+ $('theme-header-code').textContent=header;
+ $('theme-accent-code').textContent=accent;
+ const preview=$('theme-design-preview-head');
+ preview.style.background=header;preview.style.color=themeTextColor(header);preview.style.fontFamily=font;
+ $('theme-preview-title').textContent=title;
+ $('theme-preview-subtitle').textContent=subtitle;
+ const btn=$('theme-preview-button');btn.style.background=accent;btn.style.color=themeTextColor(accent);btn.style.fontFamily=font;
+}
+function saveThemeSetting(){
+ try{localStorage.setItem(THEME_KEY,JSON.stringify(themeSettings));return true}
+ catch(e){return false}
+}
+function updateTheme(message){
+ applyTheme();
+ const ok=saveThemeSetting();
+ setThemeMessage(ok?message:message+' ※端末への自動保存に失敗。JSONバックアップを保存してください。',!ok);
+}
+async function shrinkBackground(file){
+ if(!file.type.startsWith('image/'))throw new Error('画像ファイルを選んでください');
+ if(file.size>20*1024*1024)throw new Error('20MB以下の写真を選んでください');
+ const url=URL.createObjectURL(file);
+ try{
+  const img=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('この写真形式は読み込めません'));im.src=url;});
+  const largest=Math.max(img.naturalWidth,img.naturalHeight);
+  if(!largest)throw new Error('写真のサイズが不正です');
+  const canvas=document.createElement('canvas');
+  for(const maxEdge of [1200,980,800,650]){
+   const k=Math.min(1,maxEdge/largest);
+   canvas.width=Math.max(1,Math.round(img.naturalWidth*k));
+   canvas.height=Math.max(1,Math.round(img.naturalHeight*k));
+   const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   for(const quality of [.76,.62,.49]){
+    const data=canvas.toDataURL('image/jpeg',quality);
+    if(data.length<420000)return data;
+   }
+  }
+  throw new Error('写真を保存用サイズに縮小できませんでした');
+ }finally{URL.revokeObjectURL(url)}
+}
+function setupTheme(){
+ try{
+  const raw=localStorage.getItem(THEME_KEY);
+  if(raw)themeSettings=validatedTheme(JSON.parse(raw));
+ }catch(e){themeSettings={...THEME_DEFAULT}}
+ applyTheme();fillDesignForm();setThemeMessage('設定は端末内に保存します。レシピや献立の内容は変わりません。');
+}
+$('theme-open').addEventListener('click',()=>{
+ fillDesignForm();
+ const dlg=$('theme-dialog');
+ if(typeof dlg.showModal==='function'){if(!dlg.open)dlg.showModal()}
+ else dlg.setAttribute('open','');
+});
+$('theme-close').addEventListener('click',()=>{
+ const dlg=$('theme-dialog');if(typeof dlg.close==='function')dlg.close();else dlg.removeAttribute('open');
+});
+['theme-app-title','theme-app-subtitle','theme-header-color','theme-accent-color','theme-font'].forEach(id=>$(id).addEventListener('input',updateDesignPreview));
+document.querySelectorAll('[data-design-target]').forEach(btn=>btn.addEventListener('click',()=>{
+ $(btn.dataset.designTarget).value=btn.dataset.designColor;updateDesignPreview();
+}));
+$('theme-save-design').addEventListener('click',()=>{
+ themeSettings=validatedTheme({...themeSettings,
+  title:$('theme-app-title').value,
+  subtitle:$('theme-app-subtitle').value,
+  headerColor:$('theme-header-color').value,
+  accentColor:$('theme-accent-color').value,
+  font:$('theme-font').value
+ });
+ updateTheme('タイトル・色・フォントを保存しました。');
+});
+$('theme-color').addEventListener('input',e=>{$('theme-color-code').textContent=e.target.value});
+$('theme-use-color').addEventListener('click',()=>{
+ themeSettings={...themeSettings,color:$('theme-color').value,mode:'color'};
+ updateTheme('背景色を変更しました。');
+});
+document.querySelectorAll('[data-theme-color]').forEach(btn=>btn.addEventListener('click',()=>{
+ themeSettings={...themeSettings,color:btn.dataset.themeColor,mode:'color'};
+ updateTheme('背景色を変更しました。');
+}));
+$('theme-photo').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ if(themeLoading)return;
+ themeLoading=true;
+ $('theme-photo').disabled=true;
+ setThemeMessage('写真を縮小しています…');
+ try{
+  const photo=await shrinkBackground(file);
+  themeSettings={...themeSettings,photo,mode:'photo'};
+  updateTheme('写真を背景に設定しました。');
+ }catch(err){setThemeMessage('写真を設定できません：'+err.message,true)}
+ finally{themeLoading=false;$('theme-photo').disabled=false;e.target.value=''}
+});
+$('theme-use-photo').addEventListener('click',()=>{
+ if(!themeSettings.photo)return;
+ themeSettings={...themeSettings,mode:'photo'};
+ updateTheme('保存済みの写真を背景にしました。');
+});
+$('theme-remove-photo').addEventListener('click',()=>{
+ themeSettings={...themeSettings,photo:'',mode:'color'};
+ updateTheme('写真を外し、背景色に戻しました。');
+});
+$('theme-reset').addEventListener('click',()=>{
+ themeSettings={...THEME_DEFAULT};
+ updateTheme('見た目を初期状態に戻しました。');
+ fillDesignForm();
+});
+setupTheme();
+const EXTRA_RECIPES=[];
+const BASE_OVERRIDES=Object.create(null); // original base recipe name -> edited version
+const RECIPES=[...BASE_RECIPES];
+const unique=xs=>[...new Set(xs)];
+const esc=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const AVAILABLE=new Set(RECIPES.flatMap(r=>r.ingredients));
+const POPULAR=['キャベツ','卵','玉ねぎ','鶏もも肉','鶏むね肉','豚こま肉','もやし','大根','じゃがいも','にんじん'];
+const GROUPS={'野菜・きのこ':['キャベツ','玉ねぎ','にんじん','大根','もやし','小松菜','ほうれん草','ブロッコリー','ピーマン','じゃがいも','れんこん','しめじ','しいたけ','長ねぎ'], '肉・魚':['鶏むね肉','鶏もも肉','豚こま肉','豚ひき肉','さば水煮缶','ツナ缶'], '卵・豆腐・加工品':['卵','木綿豆腐','厚揚げ','ウインナー','ちくわ','チーズ'], 'その他':['冷凍コーン','パスタ','ゆでうどん']};
+let targets=[], planned=[], shopping=[], excluded=new Set(), forcedBuy=new Set(), seed=0, priorSearch='';
+let pinnedDays=[false,false,false,false,false];
+let pickerDay=-1, pickerQuery='', pickerScope='selected', pickerShown=15;
+let planMessage='';
+const selectedFoods=new Set();
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0;}
+function proteinGroup(r){const it=r.ingredients;
+ if(it.some(x=>x.includes('鶏')))return '鶏';if(it.some(x=>x.includes('豚')))return '豚';
+ if(it.some(x=>x.includes('さば')||x.includes('ツナ')))return '魚';if(it.some(x=>x.includes('ウインナー')))return '加工肉';if(it.some(x=>x.includes('卵')))return '卵';
+ if(it.some(x=>x.includes('豆腐')||x.includes('厚揚げ')))return '大豆';
+ if(it.some(x=>x.includes('うどん')||x.includes('パスタ')))return '麺';return '野菜';}
+function flavorGroup(r){const n=r.name;return /カレー/.test(n)?'カレー':/味噌|みそ/.test(n)?'みそ':/甘辛|照り|すき焼き/.test(n)?'甘辛':/塩/.test(n)?'塩':/チーズ/.test(n)?'チーズ':/卵とじ/.test(n)?'卵とじ':/炒め/.test(n)?'炒め':'その他';}
+/** 5日間全体で指定食材を使い、同じ料理・たんぱく源の連続を避ける。 */
+function chooseFive(names,round,pins=[],count=5){
+ // Pre-place pinned meals. They remain at exactly the same day.
+ const pool=RECIPES.filter(r=>r.ingredients.some(x=>names.includes(x)));
+ const result=Array(count).fill(null), used=new Set(), named=new Set(names), acquired=new Set(), ownedUsed=new Set();
+ for(let day=0;day<count;day++){
+  if(!pins[day])continue;
+  const found=RECIPES.find(r=>normKey(r.name)===normKey(pins[day].name));
+  if(!found||used.has(normKey(found.name)))continue;
+  result[day]=found;used.add(normKey(found.name));
+  found.ingredients.forEach(x=>named.has(x)?ownedUsed.add(x):acquired.add(x));
+ }
+ for(let day=0;day<count;day++){
+  if(result[day])continue;
+  let best=null,bestScore=-Infinity;
+  const remaining=names.filter(x=>!ownedUsed.has(x));
+  for(const r of pool){
+   if(used.has(normKey(r.name)))continue;
+   const covered=r.ingredients.filter(x=>named.has(x));
+   const newTargets=covered.filter(x=>!ownedUsed.has(x));
+   const extras=r.ingredients.filter(x=>!named.has(x));
+   const newExtras=extras.filter(x=>!acquired.has(x));
+   const group=proteinGroup(r),flavor=flavorGroup(r);
+   const otherMeals=result.filter(Boolean);
+   const repetition=otherMeals.filter(x=>proteinGroup(x)===group).length;
+   const near=[day-1,day+1].some(i=>i>=0&&i<count&&result[i]&&proteinGroup(result[i])===group);
+   const variety=otherMeals.filter(x=>flavorGroup(x)===flavor).length;
+   let score=newTargets.length*(day===count-1?60:27)+covered.length*4-newExtras.length*6.5+extras.length-newExtras.length;
+   score-=(r.type==='side'?24:0);score-=repetition*7+(near?13:0)+variety*2;
+   score+=((hash(r.name+'|'+round+'|'+day)%1000)/1000)*13;
+   if(day===0&&names.length>2&&covered.length===names.length)score-=9;
+   if(remaining.length>0&&count-day<=remaining.length&&newTargets.length===0)score-=65;
+   if(score>bestScore){best=r;bestScore=score;}
+  }
+  if(!best)break;
+  result[day]=best;used.add(normKey(best.name));
+  best.ingredients.forEach(x=>named.has(x)?ownedUsed.add(x):acquired.add(x));
+ }
+ // Replace unlocked redundant dishes to cover any as-yet-unselected input food.
+ for(const missing of names.filter(x=>!result.some(r=>r&&r.ingredients.includes(x)))){
+  const candidates=pool.filter(r=>r.ingredients.includes(missing)&&!used.has(normKey(r.name)));
+  if(!candidates.length)continue;
+  const slots=result.map((r,i)=>i).filter(i=>result[i]&&!pins[i]&&result[i].ingredients.filter(x=>names.includes(x)).every(x=>result.some((p,j)=>i!==j&&p&&p.ingredients.includes(x))));
+  if(!slots.length)continue;
+  const candidate=candidates.sort((a,b)=>a.ingredients.filter(x=>!named.has(x)).length-b.ingredients.filter(x=>!named.has(x)).length)[0];
+  const slot=slots[slots.length-1];used.delete(normKey(result[slot].name));result[slot]=candidate;used.add(normKey(candidate.name));
+ }
+ return result;
+}
+function servingsLabel(r){return Number.isInteger(r.servings)&&r.servings>0?`${r.servings}人分`:'人数未設定';}
+function amountList(r){
+ const amounts=r.amounts&&typeof r.amounts==='object'?r.amounts:{};
+ const rows=[];
+ r.ingredients.forEach(food=>rows.push([food,amounts[food]||'分量未設定']));
+ Object.entries(amounts).forEach(([food,qty])=>{if(!r.ingredients.includes(food))rows.push([food,qty])});
+ return `<ul class="amounts-list">${rows.map(([food,qty])=>`<li>${esc(food)}：${esc(qty)}</li>`).join('')}</ul>`;
+}
+function currentPins(){
+ return planned.map((r,i)=>pinnedDays[i]&&r?RECIPES.find(x=>normKey(x.name)===normKey(r.name))||null:null);
+}
+const NO_BUY_ITEMS=new Set(['水','湯','お湯']);
+const DEFAULT_STOCKED=new Set(['砂糖','塩','酢','しょうゆ','醤油','みそ','味噌','みりん','酒','料理酒','サラダ油','油','ごま油','オリーブ油','オリーブオイル','こしょう','黒こしょう','ブラックペッパー','塩・こしょう','だし汁']);
+
+// v0.27: Ingredient preparation matters. Raw ginger/garlic can be grated,
+// but ready-to-use grated paste cannot always replace whole/sliced pieces.
+// Do not change original recipe ingredient names or stored recipes.
+function gingerGarlicForm(value){
+ const n=String(value||'').normalize('NFKC').replace(/[\s　・･]/g,'')
+  .replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+ for(const [root,kind] of [['(?:しょうが|生姜)','ginger'],['(?:にんにく|大蒜)','garlic']]){
+  if(new RegExp('^(?:生)?'+root+'$').test(n))return {kind,form:'raw'};
+  if(new RegExp('^(?:(?:おろし|すりおろし)'+root+'|'+root+'(?:おろし|すりおろし)|'+root+'(?:チューブ|ペースト)|チューブ'+root+')$').test(n))return {kind,form:'grated'};
+ }
+ return null;
+}
+function foodCanReplace(have,need){
+ const a=gingerGarlicForm(have),b=gingerGarlicForm(need);
+ return !!(a&&b&&a.kind===b.kind&&(a.form===b.form||a.form==='raw'&&b.form==='grated'));
+}
+// Only explicitly owned items and selected ingredients count as available.
+// An automatic replacement is not mistaken for a user-owned item.
+function coveredByAvailableFood(need){
+ return [...new Set([...targets,...excluded])].find(have=>have!==need&&foodCanReplace(have,need))||'';
+}
+function shouldBuyFood(food){
+ return forcedBuy.has(food)||(!excluded.has(food)&&!coveredByAvailableFood(food));
+}
+function remainingShopping(){return shopping.filter(shouldBuyFood);}
+
+function photoTag(r,css='recipe-thumb'){return r.photo?`<img class="${css}" src="${esc(r.photo)}" alt="${esc(r.name)}の料理写真" loading="lazy">`:'';}
+function updatePlanView(preserveShopping=true){
+ const previous=new Set(excluded);const shoppingBefore=new Set(shopping);
+ shopping=unique(planned.filter(Boolean).flatMap(r=>[...r.ingredients,...Object.keys(r.amounts||{}).filter(x=>!NO_BUY_ITEMS.has(x))])).sort((a,b)=>a.localeCompare(b,'ja'));
+ excluded=preserveShopping?new Set(shopping.filter(x=>previous.has(x)||(!shoppingBefore.has(x)&&(targets.includes(x)||DEFAULT_STOCKED.has(x))))):new Set(shopping.filter(x=>targets.includes(x)||DEFAULT_STOCKED.has(x)));
+ forcedBuy=new Set([...forcedBuy].filter(x=>shopping.includes(x)));
+ $('message').innerHTML='';$('result').hidden=false;renderPicker();
+ $('title-plan').textContent=`${planned.length}日分のレシピ`;
+ $('desc-plan').textContent=`${targets.length?'「'+targets.join('・')+'」から':'レシピ一覧から'}${planned.length}品を設定。${pinnedDays.slice(0,planned.length).filter(Boolean).length}品キープ中。${planMessage}`;
+ $('coverage').innerHTML='<span class="cover-label">選んだ食材の使用：</span>'+targets.map(x=>{
+  const cnt=planned.filter(r=>r&&r.ingredients.includes(x)).length;
+  return `<span class="cover-chip ${cnt===0?'unused':''}">${esc(x)}：${cnt?cnt+'品':'今回未使用'}</span>`;
+ }).join('');
+ $('recipes').innerHTML=planned.map((r,i)=>`<article class="recipe-card"><div class="recipe-hd"><span class="daytag">${i+1}日目</span>${photoTag(r)}<div class="recipe-info"><div class="recipe-title">${esc(r.name)}</div><div class="kind">${r.type==='main'?'主菜':'副菜'} ・ ${servingsLabel(r)}</div></div></div><div class="ings">材料：${r.ingredients.map(x=>targets.includes(x)?`<span class="target-ingredient">${esc(x)}</span>`:esc(x)).join('・')}</div><div class="day-actions"><button type="button" class="keep-btn" aria-pressed="${pinnedDays[i]}" data-pin-day="${i}">${pinnedDays[i]?'✓ キープ中':'☆ キープ'}</button><button type="button" class="choose-btn" data-reroll-day="${i}">この日だけ別案 ↻</button><button type="button" class="choose-btn" data-choose-day="${i}" aria-expanded="${pickerDay===i}">${pickerDay===i?'閉じる ▴':'一覧から選ぶ ▾'}</button></div>${pickerDay===i?`<div class="day-picker"><div class="picker-heading">${i+1}日目の料理を選ぶ</div><div class="picker-controls"><input id="picker-search" type="search" value="${esc(pickerQuery)}" placeholder="料理名・食材で絞り込み" aria-label="変更する料理を検索"><select id="picker-scope" aria-label="候補の範囲"><option value="selected" ${pickerScope==='selected'?'selected':''}>選択食材を使う料理</option><option value="all" ${pickerScope==='all'?'selected':''}>全レシピから選ぶ</option></select></div><div id="picker-count" class="picker-count"></div><div id="picker-results" class="picker-results"></div><button type="button" id="picker-more" class="secondary picker-more" hidden>さらに見る ↓</button></div>`:''}<details><summary>材料の分量・作り方を見る</summary>${r.photo?photoTag(r,'recipe-photo-large'):''}<div class="servings-info">${servingsLabel(r)}${r.servings?'の材料':''}</div>${amountList(r)}<p>${esc(r.steps||'作り方は登録されていません。')}</p>${r.source_url?`<a class="recipe-source" href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">元レシピを見る ↗</a>`:''}</details></article>`).join('');
+ if(pickerDay>=0)renderPickerResults();
+ renderShopping();
+}
+function createPlan(){
+ const entered=[...selectedFoods];
+ if(!entered.length){
+  // Without ingredients, do not silently throw away previously kept meals.
+  if(planned.length){planMessage='食材が未選択です。食材を1つ以上選ぶか、「食材とキープをすべて解除」を押してください。';updatePlanView();return;}
+  $('result').hidden=true;$('message').innerHTML='<div class="panel">食材を1つ以上選択してください。</div>';return;
+ }
+ const names=entered.filter(x=>AVAILABLE.has(x));
+ const pool=RECIPES.filter(r=>r.ingredients.some(x=>names.includes(x)));
+ // Preserve the pinned recipes irrespective of changes in the ingredient selection.
+ // Old behavior: when names differed from priorSearch, pinnedDays was reset.
+ const fixed=currentPins();
+ const lastFixedDay=fixed.reduce((last,r,i)=>r?i+1:last,0);
+ if(!names.length||!pool.length){
+  if(planned.length){planMessage='選んだ食材を使う候補がまだありません。キープ済みの献立は維持しています。';targets=names;updatePlanView();return;}
+  $('result').hidden=true;$('message').innerHTML='<div class="panel">選んだ食材を使うレシピはまだ登録されていません。<br><span class="muted">予備レシピを追加するか、新しいレシピを手入力してください。</span></div>';return;
+ }
+ const count=Math.min(5,Math.max(pool.length,lastFixedDay));
+ const next=chooseFive(names,seed,fixed.slice(0,count),count);
+ if(next.length!==count||next.some(r=>!r)){
+  // Insufficient matches when ingredients were reduced: keep the previous plan,
+  // especially its pinned positions, rather than showing a failed plan or clearing it.
+  if(planned.length){targets=names;planMessage='変更候補が足りないため、前の献立を維持しました。レシピを追加するか、キープを解除してからお試しください。';updatePlanView();return;}
+  $('result').hidden=true;$('message').innerHTML='<div class="panel">献立を組み合わせられませんでした。別の食材を試してください。</div>';return;
+ }
+ const prevCount=planned.length;
+ planned=next;priorSearch=names.join('|');targets=names;
+ pinnedDays=Array.from({length:count},(_,i)=>Boolean(fixed[i]&&next[i]&&normKey(fixed[i].name)===normKey(next[i].name)));
+ pickerDay=-1;
+ const keepCount=pinnedDays.filter(Boolean).length;
+ planMessage=count<5?`（候補が${count}品のため、${count}日分を表示。${keepCount}品キープ）`:(keepCount?`（${keepCount}品のキープを維持）`:'');
+ updatePlanView(prevCount>0);
+}
+function alternativesFor(day){
+ const used=new Set(planned.filter((_,i)=>i!==day).map(r=>normKey(r.name)));
+ return RECIPES.filter(r=>r.ingredients.some(x=>targets.includes(x))&&!used.has(normKey(r.name))&&normKey(r.name)!==normKey(planned[day].name));
+}
+function rerollDay(day){
+ const candidates=alternativesFor(day);
+ if(!candidates.length){planMessage=`${day+1}日目に変更候補がありません。`;updatePlanView();return;}
+ seed++;
+ const pins=planned.map((r,i)=>i===day?null:r);
+ const attempt=chooseFive(targets,seed,pins,planned.length)[day];
+ // Never claim a replacement if the same dish is generated.
+ const alt=attempt&&normKey(attempt.name)!==normKey(planned[day].name)?attempt:candidates[hash(planned[day].name+'|'+seed)%candidates.length];
+ planned[day]=alt;pickerDay=-1;planMessage=`${day+1}日目だけ変更しました。`;updatePlanView();
+}
+function listCandidates(){
+ if(pickerDay<0)return [];
+ const used=new Set(planned.filter((_,i)=>i!==pickerDay).map(r=>normKey(r.name)));
+ const words=recipeSearchWords(pickerQuery);
+ return RECIPES.map((recipe,index)=>({recipe,index})).filter(({recipe:r})=>{
+  if(used.has(normKey(r.name)))return false;
+  if(pickerScope==='selected'&&!r.ingredients.some(x=>targets.includes(x)))return false;
+  return recipeMatchesWords(r,words);
+ });
+}
+function renderPickerResults(){
+ const container=$('picker-results');if(!container)return;
+ const all=listCandidates(),shown=all.slice(0,pickerShown);
+ $('picker-count').textContent=`${all.length}品から選択できます（${shown.length}品表示）。ほかの日に使っている料理は除外しています。`;
+ container.innerHTML=shown.map(({recipe:r,index})=>`<button type="button" class="picker-item" data-pick-recipe="${index}">${esc(r.name)}${normKey(r.name)===normKey(planned[pickerDay].name)?'（現在の料理）':''}<span>${r.type==='main'?'主菜':'副菜'} ・ ${esc(r.ingredients.join('・'))}</span></button>`).join('')||'<div class="empty">条件に合う料理がありません。検索条件を変えるか「全レシピ」に切り替えてください。</div>';
+ $('picker-more').hidden=shown.length===all.length;
+ if(!$('picker-more').hidden)$('picker-more').textContent=`さらに${Math.min(15,all.length-shown.length)}品を見る ↓`;
+}
+$('recipes').addEventListener('click',e=>{
+ const btn=e.target.closest('button');if(!btn)return;
+ if(btn.dataset.pinDay!==undefined){const i=Number(btn.dataset.pinDay);pinnedDays[i]=!pinnedDays[i];planMessage='';updatePlanView();return;}
+ if(btn.dataset.rerollDay!==undefined){rerollDay(Number(btn.dataset.rerollDay));return;}
+ if(btn.dataset.chooseDay!==undefined){const i=Number(btn.dataset.chooseDay);pickerDay=pickerDay===i?-1:i;pickerQuery='';pickerScope='selected';pickerShown=15;planMessage='';updatePlanView();return;}
+ if(btn.dataset.pickRecipe!==undefined){const r=RECIPES[Number(btn.dataset.pickRecipe)];if(!r||pickerDay<0)return;const used=planned.some((x,i)=>i!==pickerDay&&normKey(x.name)===normKey(r.name));if(used)return;
+  const day=pickerDay;planned[day]=r;pinnedDays[day]=true;pickerDay=-1;planMessage=`${day+1}日目を手動変更し、キープしました。`;updatePlanView();return;}
+ if(btn.id==='picker-more'){pickerShown+=15;renderPickerResults();}
+});
+$('recipes').addEventListener('input',e=>{if(e.target.id==='picker-search'){pickerQuery=e.target.value;pickerShown=15;renderPickerResults();}});
+$('recipes').addEventListener('change',e=>{if(e.target.id==='picker-scope'){pickerScope=e.target.value;pickerShown=15;renderPickerResults();}});
+function renderShopping(){
+ const rest=remainingShopping();
+ $('shopping').innerHTML=rest.length?rest.map(x=>`<div class="item"><span class="itemname">${esc(x)}</span><button type="button" class="remove" data-remove="${esc(x)}" aria-label="${esc(x)}を買い物から外す" title="家にあるので外す">×</button></div>`).join(''):'<div class="empty">買う材料はありません。<br>必要な材料は下の「家にある・買わない材料」で確認できます。</div>';
+ $('shopping').querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{excluded.add(btn.dataset.remove);forcedBuy.delete(btn.dataset.remove);renderShopping()}));
+ const removed=shopping.filter(x=>!shouldBuyFood(x));$('ownedarea').hidden=removed.length===0;
+ $('ownedlist').innerHTML=removed.map(x=>{
+  const source=coveredByAvailableFood(x);
+  const hint=source&&!excluded.has(x)?`（${esc(source)}で代用）`:'';
+  return `<button type="button" class="restore" data-restore="${esc(x)}" title="${esc(x)}を買い物へ追加">${esc(x)}${hint} ＋</button>`;
+ }).join('');
+ $('ownedlist').querySelectorAll('[data-restore]').forEach(btn=>btn.addEventListener('click',()=>{
+  const x=btn.dataset.restore;
+  excluded.delete(x);
+  // Explicitly choosing + overrides an otherwise automatic substitution.
+  if(coveredByAvailableFood(x)||targets.includes(x)||DEFAULT_STOCKED.has(x))forcedBuy.add(x);
+  renderShopping();
+ }));
+ $('copy').disabled=rest.length===0;
+}
+/** Only foods from the registered list may be selected. */
+function currentFoods(){return [...selectedFoods];}
+function foodButton(n){const active=currentFoods().includes(n);return `<button type="button" class="food-chip" data-food="${esc(n)}" aria-pressed="${active}" title="${active?'選択を解除':'食材に追加'}：${esc(n)}">${active?'✓ ':''}${esc(n)}</button>`;}
+function renderPicker(){
+ const current=currentFoods();
+ $('food-count').textContent=`（${AVAILABLE.size}種類）`;
+ $('popular-foods').innerHTML=POPULAR.filter(x=>AVAILABLE.has(x)).map(foodButton).join('');
+ const categorized=new Set(Object.values(GROUPS).flat());
+ const uncategorized=[...AVAILABLE].filter(x=>!categorized.has(x)).sort((a,b)=>a.localeCompare(b,'ja'));
+ $('all-foods').innerHTML=Object.entries(GROUPS).map(([group,foods])=>`<div class="food-category"><h3>${esc(group)}</h3><div class="foods-grid">${foods.filter(x=>AVAILABLE.has(x)).map(foodButton).join('')}</div></div>`).join('')+(uncategorized.length?`<div class="food-category"><h3>追加された食材</h3><div class="foods-grid">${uncategorized.map(foodButton).join('')}</div></div>`:'');
+ if(AVAILABLE.size===0){$('popular-foods').innerHTML='<div class="muted">登録された食材がありません。レシピを追加すると、ここに食材が表示されます。</div>';$('all-foods').innerHTML='';$('toggle-foods').hidden=true;}else{$('toggle-foods').hidden=false;}
+ $('picked').innerHTML=current.length?'<span class="picked-label">選択中（押すと外せます）</span>'+current.map(x=>`<button type="button" class="picked-chip ${AVAILABLE.has(x)?'':'missing'}" data-unpick="${esc(x)}" title="${esc(x)}を外す">${esc(x)} ×</button>`).join(''):'<span class="picked-empty">まだ食材が選択されていません</span>';
+ // Event delegation is attached only once below.
+}
+function updateFoods(food,removeOnly=false){
+ const names=currentFoods();const selected=names.includes(food);
+ const next=names.filter(x=>x!==food);
+ if(!selected&&!removeOnly)next.push(food);
+ selectedFoods.clear();next.forEach(x=>selectedFoods.add(x));renderPicker();
+}
+$('popular-foods').addEventListener('click',e=>{const b=e.target.closest('[data-food]');if(b)updateFoods(b.dataset.food)});
+$('all-foods').addEventListener('click',e=>{const b=e.target.closest('[data-food]');if(b)updateFoods(b.dataset.food)});
+$('picked').addEventListener('click',e=>{const b=e.target.closest('[data-unpick]');if(b)updateFoods(b.dataset.unpick,true)});
+$('toggle-foods').addEventListener('click',()=>{const panel=$('all-foods'),open=panel.hidden;panel.hidden=!open;$('toggle-foods').setAttribute('aria-expanded',String(open));$('toggle-foods').textContent=open?'閉じる ▴':'すべて見る ▾'});
+
+function showScreen(which,scroll=true){
+ if(!['plan','browse','register'].includes(which))return;
+ for(const name of ['plan','browse','register']){
+  $('screen-'+name).hidden=name!==which;
+  const btn=document.querySelector('[data-screen="'+name+'"]');
+  if(name===which)btn.setAttribute('aria-current','page');
+  else btn.removeAttribute('aria-current');
+ }
+ if(which==='browse'){
+  $('browse-panel').open=true;
+  browseOpened=true;
+  renderBrowser();
+ }
+ if(which==='register')$('manage-panel').open=true;
+ if(scroll)window.scrollTo({top:0,behavior:'instant'});
+}
+function showManageTab(which){
+ if(which==='library'){showScreen('browse');$('personal-tools').open=true;return;}
+ for(const name of ['json','manual']){
+  const selected=name===which;
+  $('manage-tab-'+name).hidden=!selected;
+  $('tab-'+name).setAttribute('aria-selected',String(selected));
+ }
+ showScreen('register');
+}
+document.querySelectorAll('[data-screen]').forEach(btn=>btn.addEventListener('click',()=>showScreen(btn.dataset.screen)));
+$('manage-tabs').addEventListener('click',e=>{
+ const tab=e.target.closest('[data-manage-tab]');
+ if(tab)showManageTab(tab.dataset.manageTab);
+});
+$('go-manage').addEventListener('click',()=>showManageTab('json'));
+function openManualEntry(){
+ clearEditor();
+ showManageTab('manual');
+}
+$('go-manual').addEventListener('click',openManualEntry);
+$('go-manual-empty').addEventListener('click',openManualEntry);
+$('browse-add-new').addEventListener('click',openManualEntry);
+$('register-see-recipes').addEventListener('click',()=>showScreen('browse'));
+
+$('make-plan').addEventListener('click',()=>{seed++;createPlan();});
+$('clear-foods').addEventListener('click',()=>{selectedFoods.clear();renderPicker();$('result').hidden=true;$('message').innerHTML='';priorSearch='';excluded.clear();forcedBuy.clear();pinnedDays=[false,false,false,false,false];pickerDay=-1;planned=[];shopping=[];});
+$('reroll').addEventListener('click',()=>{if(planned.length>0&&pinnedDays.slice(0,planned.length).every(Boolean)){planMessage='すべてキープ中です。変更したい日のキープを解除してください。';updatePlanView();return;}seed++;createPlan();});
+$('reset').addEventListener('click',()=>{excluded=new Set(shopping.filter(x=>targets.includes(x)||DEFAULT_STOCKED.has(x)));forcedBuy.clear();renderShopping()});
+$('copy').addEventListener('click',async()=>{
+ const txt=remainingShopping().map(x=>'□ '+x).join('\n');
+ try{await navigator.clipboard.writeText(txt);$('copy').textContent='コピーしました ✓';setTimeout(()=>$('copy').textContent='残ったリストをコピー',1800)}
+ catch(e){const area=document.createElement('textarea');area.value=txt;document.body.append(area);area.select();try{document.execCommand('copy');$('copy').textContent='コピーしました ✓'}catch(err){window.prompt('以下をコピーしてください',txt)}area.remove();setTimeout(()=>$('copy').textContent='残ったリストをコピー',1800)}
+});
+// --- v0.7: personal recipe library ---
+const STORAGE_KEY='amari-kondate-staples-v018';
+const OLD_STORAGE_KEY='amari-kondate-staples-v017'; // 旧版の登録レシピを初回起動時に引き継ぎ
+const BACKUP_FORMAT='amarimono-recipes-backup-v1';
+const INGREDIENT_ALIASES={
+ 'とりもも':'鶏もも肉','とりモモ':'鶏もも肉','とりもも肉':'鶏もも肉','鶏モモ':'鶏もも肉','鶏モモ肉':'鶏もも肉','鶏もも':'鶏もも肉',
+ 'とりむね':'鶏むね肉','とりむね肉':'鶏むね肉','鶏ムネ肉':'鶏むね肉','鶏むね':'鶏むね肉',
+ '玉葱':'玉ねぎ','たまねぎ':'玉ねぎ','タマネギ':'玉ねぎ',
+ 'たまご':'卵','タマゴ':'卵','鶏卵':'卵',
+ 'ぶたこま':'豚こま肉','豚小間':'豚こま肉','豚こま':'豚こま肉','豚小間肉':'豚こま肉',
+ 'まいたけ':'舞茸','マイタケ':'舞茸',
+ 'ジャガイモ':'じゃがいも','じゃが芋':'じゃがいも',
+ 'ニンジン':'にんじん','人参':'にんじん','玉ねぎ':'玉ねぎ',
+ 'トリモモ':'鶏もも肉','鶏腿肉':'鶏もも肉','ピーマン':'ピーマン'
+};
+const normKey=s=>String(s||'').normalize('NFKC').trim().replace(/[\s・･]/g,'').replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96)).toLowerCase();
+
+// Search-only normalization: preserve original recipe names and ingredient data.
+// Recognize kana variants plus a small set of genuine ingredient name aliases.
+// Each rule's last spelling is the canonical search spelling; keep longest alternatives first.
+const RECIPE_SEARCH_ALIASES=[
+ [/玉子|たまご/g,'卵'],
+ [/玉葱|たまねぎ/g,'玉ねぎ'],
+ [/人参|にんじん/g,'にんじん'],
+ [/馬鈴薯|じゃが芋|じゃがいも/g,'じゃがいも'],
+ [/青紫蘇|青じそ|大葉|紫蘇|しそ/g,'しそ'],
+ [/鶏胸肉|とりむね肉|鶏むね肉/g,'鶏むね肉'],
+ [/鶏腿肉|とりもも肉|鶏もも肉/g,'鶏もも肉'],
+ [/豚小間切れ肉|豚こま切れ肉|豚小間肉|豚こま肉/g,'豚こま肉'],
+ [/合挽き肉|合い挽き肉|合挽肉|あいびき肉|合いびき肉/g,'合いびき肉']
+];
+function normalizeRecipeSearch(value){
+ let s=String(value||'').normalize('NFKC').toLowerCase()
+  .replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96));
+ for(const [pattern,canonical] of RECIPE_SEARCH_ALIASES)s=s.replace(pattern,canonical);
+ return s;
+}
+function recipeSearchWords(value){
+ return String(value||'').trim().split(/[\s　]+/).filter(Boolean).map(normalizeRecipeSearch);
+}
+function recipeMatchesWords(recipe,words){
+ const haystack=normalizeRecipeSearch(recipe.name+' '+recipe.ingredients.join(' '));
+ return words.every(word=>haystack.includes(word));
+}
+
+const ALIASES=Object.fromEntries(Object.entries(INGREDIENT_ALIASES).map(([k,v])=>[normKey(k),v]));
+function canonicalFood(raw){
+ const value=String(raw).normalize('NFKC').trim().replace(/\s+/g,' ');
+ const key=normKey(value);
+ if(ALIASES[key])return ALIASES[key];
+ const match=[...AVAILABLE,...Object.values(GROUPS).flat()].find(x=>normKey(x)===key);
+ return match||value;
+}
+function validSource(value){
+ if(value==null||value==='')return '';
+ if(typeof value!=='string'||value.length>1600)throw new Error('参照URLが不正です');
+ let raw=value.trim();
+ if(!raw)return '';
+ // ChatGPTなどが自動整形した Markdown リンク [表示文字](https://...) を補正する。
+ const md=raw.match(/^\[[^\]\r\n]{1,900}\]\(\s*(https?:\/\/[^\s)]+)\s*\)$/i);
+ if(md)raw=md[1];
+ // <https://...> 形式でコピーされた場合にも対応する。
+ if(/^<https?:\/\/[^<>]+>$/i.test(raw))raw=raw.slice(1,-1);
+ let url;
+ try{url=new URL(raw)}catch(e){throw new Error('参照URLの形式が不正です')}
+ if(!['https:','http:'].includes(url.protocol))throw new Error('参照URLはhttp(s)のみ対応しています');
+ // new URL は空白や制御文字を補正することがあるので、URL以外のテキスト混入は不許可。
+ if(/\s/.test(raw)||!/^https?:\/\//i.test(raw))throw new Error('参照URLの形式が不正です');
+ return url.href;
+}
+function cleanRecipe(r){
+ if(!r||typeof r!=='object'||Array.isArray(r))throw new Error('レシピの構造が違います');
+ const name=typeof r.name==='string'?r.name.normalize('NFKC').trim():'';
+ if(!name||name.length>70)throw new Error('料理名は1〜70文字にしてください');
+ if(!['main','side'].includes(r.type))throw new Error('typeはmain（主菜）かside（副菜）です');
+ if(!Array.isArray(r.ingredients)||!r.ingredients.length||r.ingredients.length>15)throw new Error('食材は1〜15種類にしてください');
+ const ingredients=unique(r.ingredients.map(v=>{
+  if(typeof v!=='string'||!v.trim()||v.length>40)throw new Error('食材名は1〜40文字にしてください');
+  return canonicalFood(v);
+ }));
+ let servings=null;
+ if(r.servings!==undefined&&r.servings!==null&&r.servings!==''){
+  const n=Number(r.servings);
+  if(!Number.isInteger(n)||n<1||n>30)throw new Error('何人前は1〜30の整数で入力してください');
+  servings=n;
+ }
+ let amounts={};
+ if(r.amounts!==undefined&&r.amounts!==null){
+  if(typeof r.amounts!=='object'||Array.isArray(r.amounts))throw new Error('amountsは材料名と分量のJSONオブジェクトにしてください');
+  if(Object.keys(r.amounts).length>40)throw new Error('分量の登録は40行以内にしてください');
+  for(const [foodRaw,qtyRaw] of Object.entries(r.amounts)){
+   if(typeof qtyRaw!=='string'||!qtyRaw.trim()||qtyRaw.length>80)throw new Error('分量は1〜80文字で入力してください');
+   if(!foodRaw.trim()||foodRaw.length>40)throw new Error('材料名は1〜40文字にしてください');
+   const food=canonicalFood(foodRaw);
+   if(Object.prototype.hasOwnProperty.call(amounts,food))throw new Error('分量欄に同じ材料が重複しています');
+   amounts[food]=qtyRaw.trim();
+  }
+ }
+ const steps=typeof r.steps==='string'?r.steps.trim():'';
+ if(!steps||steps.length>1600)throw new Error('作り方は1〜1600文字にしてください');
+ const cleaned={name,type:r.type,ingredients,servings,amounts,steps,source_url:validSource(r.source_url)};
+ if(r.photo!==undefined&&r.photo!==null&&r.photo!==''){
+  if(typeof r.photo!=='string'||r.photo.length>90000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(r.photo))throw new Error('写真データが不正、または大きすぎます');
+  cleaned.photo=r.photo;
+ }
+ if(Number.isInteger(r.stock_id)&&r.stock_id>=0&&r.stock_id<STOCK_RECIPES.length)cleaned.stock_id=r.stock_id;
+ return cleaned;
+}
+function status(message,error=false){$('manage-status').textContent=message;$('manage-status').classList.toggle('error',error)}
+
+// v0.9: recipe catalogue (included recipes + user-imported recipes).
+let browseShown=20;
+let browseOpened=false;
+const browsePanel=$('browse-panel');
+function filteredBrowse(){
+ const words=recipeSearchWords($('browse-query').value);
+ const type=$('browse-kind').value,origin=$('browse-origin').value;
+ return RECIPES.map((r,index)=>({recipe:r,index})).filter(({recipe:r,index})=>{
+  if(type!=='all'&&r.type!==type)return false;
+  if(origin==='base'&&index>=BASE_RECIPES.length)return false;
+  if(origin==='personal'&&index<BASE_RECIPES.length)return false;
+  return recipeMatchesWords(r,words);
+ });
+}
+function renderBrowser(){
+ $('browse-total').textContent=`（${RECIPES.length}品）`;
+ if(!browseOpened)return;
+ const matches=filteredBrowse();
+ const shown=matches.slice(0,browseShown);
+ $('browse-status').textContent=`${matches.length}品見つかりました（${shown.length}品表示） / 登録済み ${RECIPES.length}品`;
+ $('browse-list').innerHTML=shown.length?shown.map(({recipe:r,index})=>`<article class="browse-card"><details><summary>${photoTag(r,'browse-thumb')}<div class="browse-title-wrap"><div class="browse-name">${esc(r.name)}</div><div class="browse-meta">${r.type==='main'?'主菜':'副菜'} ・ ${index<BASE_RECIPES.length?(BASE_OVERRIDES[BASE_RECIPES[index].name]?'初期収録・編集済み':'最初から収録'):'自分で追加'} ・ ${r.ingredients.length}材料</div></div></summary><div class="browse-details">${r.photo?photoTag(r,'recipe-photo-large'):''}<div class="browse-caption">材料・分量（${servingsLabel(r)}）</div>${amountList(r)}<div class="browse-caption">作り方</div><p>${esc(r.steps||'作り方は登録されていません。')}</p>${r.source_url?`<a href="${esc(r.source_url)}" target="_blank" rel="noopener noreferrer">元レシピを開く ↗</a>`:''}<div class="browse-actions"><button type="button" class="primary" data-browse-pin="${index}">☆ 献立にキープ</button>${index<BASE_RECIPES.length?`<button type="button" class="secondary" data-base-edit="${index}">このレシピを編集</button>${BASE_OVERRIDES[BASE_RECIPES[index].name]?`<button type="button" class="secondary danger-button" data-base-restore="${index}">初期状態に戻す</button>`:''}`:`<button type="button" class="secondary" data-own-edit="${index-BASE_RECIPES.length}">このレシピを編集</button>`}</div></div></details></article>`).join(''):'<div class="empty">条件に合うレシピがありません。検索語や絞り込みを変えてください。</div>';
+ const remaining=matches.length-shown.length;
+ $('browse-more').hidden=remaining<=0;
+ if(remaining>0)$('browse-more').textContent=`さらに${Math.min(20,remaining)}品を見る ↓`;
+}
+function resetBrowse(){browseShown=20;renderBrowser()}
+browsePanel.addEventListener('toggle',()=>{
+ if(browsePanel.open){browseOpened=true;renderBrowser()}
+});
+$('browse-query').addEventListener('input',resetBrowse);
+// Keep live filtering. Submitting search dismisses the keyboard and moves to results.
+function completeBrowseSearch(){
+  $('browse-query').blur();
+  resetBrowse();
+  // On Android the virtual keyboard collapses asynchronously; wait until it starts closing.
+  window.setTimeout(()=>{
+    if(!$('screen-browse').hidden)$('browse-status').scrollIntoView({behavior:'smooth',block:'start'});
+  },260);
+}
+$('browse-search-submit').addEventListener('click',completeBrowseSearch);
+$('browse-query').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();completeBrowseSearch()}
+});
+$('browse-kind').addEventListener('change',resetBrowse);
+$('browse-origin').addEventListener('change',resetBrowse);
+$('browse-more').addEventListener('click',()=>{browseShown+=20;renderBrowser()});
+// Registering a pin from "レシピを見る" does not alter the user's selected/owned food list.
+let browsingPinRecipeIndex=-1;
+const browsePinDialog=$('browse-pin-dialog');
+function openBrowsePinDialog(index){
+ const recipe=RECIPES[index];if(!recipe)return;
+ browsingPinRecipeIndex=index;
+ $('browse-query').blur();
+ $('browse-pin-title').textContent=`「${recipe.name}」を献立にキープ`;
+ $('browse-pin-intro').textContent=planned.length
+  ?'入れたい日を選んでください。現在の献立を残したまま、選んだ日だけ変更します。'
+  :'献立がまだないので、1日目から追加できます。';
+ const rows=[];
+ for(let day=0;day<planned.length;day++){
+  const current=planned[day];
+  const same=normKey(current.name)===normKey(recipe.name);
+  rows.push(`<button type="button" data-browse-pin-day="${day}" ${same&&pinnedDays[day]?'disabled':''}><strong>${day+1}日目に${same?'登録済み':pinnedDays[day]?'入れ替えてキープ':'キープ'}</strong><span class="slot-current">現在：${esc(current.name)}${pinnedDays[day]?'（キープ中）':''}${same?' ／ 同じ料理':''}</span></button>`);
+ }
+ if(planned.length<5){
+  rows.push(`<button type="button" data-browse-pin-day="${planned.length}"><strong>＋ ${planned.length+1}日目に追加してキープ</strong><span class="slot-current">新しい枠として追加</span></button>`);
+ }
+ $('browse-pin-slots').innerHTML=rows.join('');
+ if(typeof browsePinDialog.showModal==='function')browsePinDialog.showModal();
+ else alert('ブラウザが日付選択に対応していません。');
+}
+function pinBrowsedRecipe(day){
+ const recipe=RECIPES[browsingPinRecipeIndex];
+ if(!recipe||!Number.isInteger(day)||day<0||day>planned.length||day>=5)return;
+ const inOther=planned.findIndex((r,i)=>i!==day&&normKey(r.name)===normKey(recipe.name));
+ if(inOther!==-1){alert(`「${recipe.name}」はすでに${inOther+1}日目にあります。同じ料理を複数の日には登録できません。`);return;}
+ const current=planned[day];
+ if(current&&pinnedDays[day]&&normKey(current.name)!==normKey(recipe.name)){
+  if(!confirm(`${day+1}日目にキープしている「${current.name}」を「${recipe.name}」に入れ替えますか？`))return;
+ }
+ if(day===planned.length)planned.push(recipe);
+ else planned[day]=recipe;
+ pinnedDays[day]=true;
+ pickerDay=-1;
+ // If a meal plan has not been generated yet, keep the current food selection unchanged.
+ if(!targets.length)targets=[...selectedFoods].filter(x=>AVAILABLE.has(x));
+ planMessage=`「${recipe.name}」を${day+1}日目にキープしました。`;
+ updatePlanView();
+ if(browsePinDialog.open)browsePinDialog.close();
+ showScreen('plan',false);
+ requestAnimationFrame(()=>$('result').scrollIntoView({block:'start',behavior:'smooth'}));
+}
+$('browse-pin-cancel').addEventListener('click',()=>browsePinDialog.close());
+$('browse-pin-slots').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-browse-pin-day]');if(!btn||btn.disabled)return;
+ pinBrowsedRecipe(Number(btn.dataset.browsePinDay));
+});
+$('browse-list').addEventListener('click',e=>{
+ const pin=e.target.closest('[data-browse-pin]');
+ if(pin){openBrowsePinDialog(Number(pin.dataset.browsePin));return;}
+ const editBase=e.target.closest('[data-base-edit]');
+ const editOwn=e.target.closest('[data-own-edit]');
+ const restore=e.target.closest('[data-base-restore]');
+ if(editBase){fillBaseEditor(Number(editBase.dataset.baseEdit));return;}
+ if(editOwn){fillEditor(Number(editOwn.dataset.ownEdit));return;}
+ if(restore){restoreBase(Number(restore.dataset.baseRestore));}
+});
+
+function rebuildIndex(){
+ RECIPES.splice(0,RECIPES.length,...BASE_RECIPES.map(r=>BASE_OVERRIDES[r.name]||r),...EXTRA_RECIPES);
+ AVAILABLE.clear();RECIPES.forEach(r=>r.ingredients.forEach(x=>AVAILABLE.add(x)));
+ // Remove selected foods only when their last recipe disappears.
+ for(const f of selectedFoods){if(!AVAILABLE.has(f))selectedFoods.delete(f)}
+ renderPicker();
+ $('empty-library').hidden=RECIPES.length>0;
+ if(!$('result').hidden){pinnedDays=pinnedDays.map((p,i)=>p&&RECIPES.some(r=>normKey(r.name)===normKey(planned[i]?.name)));pickerDay=-1;seed=0;createPlan()}
+ renderMine();
+ renderBrowser();
+ renderStock();
+}
+function buildBackup(){
+ return {format:BACKUP_FORMAT,base_edits:Object.entries(BASE_OVERRIDES).map(([original_name,recipe])=>({original_name,recipe})),custom_recipes:EXTRA_RECIPES,appearance:{...themeSettings}};
+}
+function restoreBackup(data,fromSaved=false){
+ if(!data||typeof data!=='object'||Array.isArray(data)||data.format!==BACKUP_FORMAT||!Array.isArray(data.custom_recipes))throw new Error('対応していないバックアップ形式です');
+ const oldEdits=Array.isArray(data.base_edits)?data.base_edits:[];
+ if(data.custom_recipes.length+oldEdits.length>1000)throw new Error('バックアップの件数が多すぎます');
+ const seen=new Set(RECIPES.map(r=>normKey(r.name)));
+ const pending=[];let duplicates=0,edited=0;const errors=[];
+ for(const [i,entry] of oldEdits.entries()){
+  try{
+   const r=cleanRecipe(entry?.recipe);
+   const base=BASE_RECIPES.find(x=>x.name===entry.original_name);
+   if(base){BASE_OVERRIDES[base.name]=r;edited++}
+   else if(!seen.has(normKey(r.name))){pending.push(r);seen.add(normKey(r.name))}
+   else duplicates++;
+  }catch(e){errors.push(`編集済みレシピ${i+1}：${e.message}`)}
+ }
+ for(const [i,recipe] of data.custom_recipes.entries()){
+  try{
+   const r=cleanRecipe(recipe),key=normKey(r.name);
+   if(seen.has(key)){duplicates++;continue}
+   seen.add(key);pending.push(r);
+  }catch(e){errors.push(`追加レシピ${i+1}：${e.message}`)}
+ }
+ EXTRA_RECIPES.push(...pending);
+ if(data.appearance!==undefined){
+  try{themeSettings=validatedTheme(data.appearance);applyTheme();fillDesignForm();saveThemeSetting()}
+  catch(e){errors.push('見た目設定：'+e.message)}
+ }
+ rebuildIndex();const ok=persist();
+ if(!fromSaved)status(`バックアップを読み込みました。追加 ${pending.length}品 / 初期レシピの編集 ${edited}品 / 重複 ${duplicates}品 / エラー ${errors.length}品。${ok?'端末内に保存しました。':'端末内への保存に失敗しました。JSONを保管してください。'}${errors.length?'\n'+errors.join('\n'):''}`,errors.length>0||!ok);
+ return {added:pending.length,edited,duplicates,errors,saved:ok,addedNames:pending.map(r=>r.name)};
+}
+function seenBaseName(base,name){return base.some(r=>normKey(r.name)===normKey(name))}
+function importData(value,fromSaved=false){return Array.isArray(value)?importArray(value,fromSaved):restoreBackup(value,fromSaved)}
+function persist(){
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(buildBackup()));return true}
+ catch(e){return false}
+}
+function importArray(items,fromSaved=false){
+ if(!Array.isArray(items)||items.length>1000)throw new Error('レシピはJSON配列にしてください（最大1000品）');
+ const names=new Set(RECIPES.map(x=>normKey(x.name)));
+ let added=0,duplicates=0;const errors=[],addedNames=[];
+ items.forEach((item,i)=>{
+  try{
+   const normalized=cleanRecipe(item);
+   const key=normKey(normalized.name);
+   if(names.has(key)){duplicates++;return}
+   EXTRA_RECIPES.push(normalized);names.add(key);added++;addedNames.push(normalized.name);
+   // Sync food aliases for the following entries in this same import.
+   normalized.ingredients.forEach(x=>AVAILABLE.add(x));
+  }catch(e){errors.push(`${i+1}件目：${e.message}`)}
+ });
+ rebuildIndex();
+ const saved=persist();
+ if(!fromSaved)status(`追加：${added}品 / 重複：${duplicates}品 / エラー：${errors.length}品\n現在 ${RECIPES.length}レシピ・${AVAILABLE.size}食材。${saved?'端末内へ保存しました。':'端末内に保存できませんでした。必ずJSONをバックアップしてください。'}${errors.length?'\n'+errors.slice(0,8).join('\n'):''}`,errors.length>0||!saved);
+ return {added,duplicates,errors,saved,addedNames};
+}
+function renderMine(){
+ $('mine-count').textContent=`（${EXTRA_RECIPES.length}品）`;
+ $('mine-list').innerHTML=EXTRA_RECIPES.length?EXTRA_RECIPES.map((r,i)=>`<div class="mine-row"><span class="mine-name">${esc(r.name)} <span class="muted">${r.type==='main'?'主菜':'副菜'}</span></span><div class="mine-actions"><button type="button" class="secondary" data-edit="${i}">編集</button><button type="button" class="secondary danger-button" data-delete="${i}">削除</button></div></div>`).join(''):'<div class="muted">まだレシピはありません。</div>';
+}
+let editingIndex=-1;
+let editingBaseKey=null;
+let editorPhoto='';
+let photoBusy=false;
+function showEditorPhoto(){
+ $('photo-preview').hidden=!editorPhoto;
+ if(editorPhoto)$('photo-preview-img').src=editorPhoto;
+ else $('photo-preview-img').removeAttribute('src');
+ $('photo-status').textContent=editorPhoto?`写真あり（保存後はJSONバックアップも忘れずに）`:'写真なし';
+}
+async function shrinkPhoto(file){
+ if(!file.type.startsWith('image/'))throw new Error('画像ファイルを選んでください');
+ if(file.size>15*1024*1024)throw new Error('元の画像は15MB以下にしてください');
+ const objectUrl=URL.createObjectURL(file);
+ try{
+  const im=await new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('この写真形式はブラウザで読み込めません'));image.src=objectUrl;});
+  const largest=Math.max(im.naturalWidth,im.naturalHeight);
+  if(!largest)throw new Error('写真のサイズが正しくありません');
+  const canvas=document.createElement('canvas');
+  for(const maxSize of [540,440,360,280,210]){
+   const ratio=Math.min(1,maxSize/largest);canvas.width=Math.max(1,Math.round(im.naturalWidth*ratio));canvas.height=Math.max(1,Math.round(im.naturalHeight*ratio));
+   const ctx=canvas.getContext('2d');ctx.drawImage(im,0,0,canvas.width,canvas.height);
+   for(const q of [.7,.55,.42]){
+    const uri=canvas.toDataURL('image/jpeg',q);
+    if(uri.length<88000)return uri;
+   }
+  }
+  throw new Error('写真の圧縮に失敗しました。別の写真を試してください');
+ }finally{URL.revokeObjectURL(objectUrl)}
+}
+$('edit-photo').addEventListener('change',async(e)=>{
+ const file=e.target.files[0];if(!file)return;
+ photoBusy=true;$('save-one').disabled=true;$('photo-status').textContent='写真を縮小しています…';
+ try{editorPhoto=await shrinkPhoto(file);showEditorPhoto();}
+ catch(err){$('photo-status').textContent=err.message;}
+ finally{photoBusy=false;$('save-one').disabled=false;e.target.value='';}
+});
+$('remove-photo').addEventListener('click',()=>{editorPhoto='';showEditorPhoto()});
+function clearEditor(){
+ editingIndex=-1;editingBaseKey=null;
+ $('edit-title').textContent='レシピを手入力';
+ ['edit-name','edit-ingredients','edit-servings','edit-amounts','edit-steps','edit-url'].forEach(id=>$(id).value='');
+ editorPhoto='';showEditorPhoto();$('edit-photo').value='';$('edit-type').value='main';$('save-one').textContent='レシピを保存する';$('cancel-edit').hidden=true;$('restore-base').hidden=true;$('edit-mode-note').textContent='';$('edit-mode-note').classList.remove('error');
+}
+function fillEditor(i){
+ const r=EXTRA_RECIPES[i];if(!r)return;
+ editingIndex=i;editingBaseKey=null;showManageTab('manual');$('edit-title').textContent='追加レシピを編集';$('edit-mode-note').textContent='';$('restore-base').hidden=true;
+ $('edit-name').value=r.name;$('edit-type').value=r.type;
+ $('edit-ingredients').value=r.ingredients.join('、');$('edit-steps').value=r.steps;
+ $('edit-servings').value=r.servings||'';
+ $('edit-amounts').value=Object.entries(r.amounts||{}).map(([k,v])=>k+'：'+v).join('\n');
+ $('edit-url').value=r.source_url||'';editorPhoto=r.photo||'';showEditorPhoto();
+ $('save-one').textContent='編集内容を保存';$('cancel-edit').hidden=false;
+ requestAnimationFrame(()=>$('edit-name').scrollIntoView({block:'center',behavior:'smooth'}));
+}
+function fillBaseEditor(i){
+ const original=BASE_RECIPES[i];if(!original)return;
+ const r=BASE_OVERRIDES[original.name]||original;
+ editingIndex=-1;editingBaseKey=original.name;
+ showManageTab('manual');
+ $('edit-title').textContent='初期レシピを編集';
+ $('edit-name').value=r.name;$('edit-type').value=r.type;
+ $('edit-ingredients').value=r.ingredients.join('、');$('edit-steps').value=r.steps;
+ $('edit-servings').value=r.servings||'';
+ $('edit-amounts').value=Object.entries(r.amounts||{}).map(([k,v])=>k+'：'+v).join('\n');
+ $('edit-url').value=r.source_url||'';editorPhoto=r.photo||'';showEditorPhoto();
+ $('edit-mode-note').textContent=`「${original.name}」の編集内容を保存します。元データは残るので、いつでも戻せます。`;
+ $('save-one').textContent='編集内容を保存';$('cancel-edit').hidden=false;
+ $('restore-base').hidden=!BASE_OVERRIDES[original.name];
+ requestAnimationFrame(()=>$('edit-name').scrollIntoView({block:'center',behavior:'smooth'}));
+}
+function restoreBase(i){
+ const original=BASE_RECIPES[i];if(!original||!BASE_OVERRIDES[original.name])return;
+ if(!confirm(`「${original.name}」の変更を取り消し、初期状態に戻しますか？`))return;
+ delete BASE_OVERRIDES[original.name];
+ if(editingBaseKey===original.name)clearEditor();
+ rebuildIndex();
+ const ok=persist();status(`「${original.name}」を初期状態に戻しました。${ok?'':'端末内への保存に失敗しました。JSONでバックアップしてください。'}`,!ok);
+}
+$('restore-base').addEventListener('click',()=>{
+ const idx=BASE_RECIPES.findIndex(r=>r.name===editingBaseKey);
+ if(idx>=0)restoreBase(idx);
+});
+function parseRecipeJSON(input){
+ const text=String(input).trim().replace(/^```(?:json)?\s*\n([\s\S]*?)\n```\s*$/i,'$1');
+ return JSON.parse(text);
+}
+// Show a clear result after explicit JSON paste/file imports. Do not show on page-load restoration.
+const resultDialog=$('import-result-dialog');
+function openImportDialog(){
+ if(typeof resultDialog.showModal==='function'){
+  if(!resultDialog.open)resultDialog.showModal();
+ }else{
+  alert($('import-result-title').textContent+'\n'+$('import-result-description').textContent);
+ }
+}
+function showImportResult(r){
+ const added=r.added||0,edits=r.edited||0,dupes=r.duplicates||0,errors=r.errors||[];
+ $('import-result-title').textContent=added>0||edits>0?'レシピを取り込みました':errors.length?'レシピの一部を取り込めませんでした':'新しいレシピはありませんでした';
+ $('import-result-description').textContent=added>0||edits>0?'登録した内容をレシピ一覧と献立候補へ反映しました。':dupes?'すでに登録済みの料理は追加しませんでした。':'追加できるレシピはありませんでした。';
+ const counts=$('import-result-counts');counts.replaceChildren();
+ for(const [label,count] of [['追加',added],['初期レシピ編集',edits],['重複',dupes],['エラー',errors.length]]){
+  if(label==='初期レシピ編集'&&!edits)continue;
+  const el=document.createElement('div');el.className='import-count'+(label==='エラー'&&count?' has-errors':'');
+  const labelEl=document.createElement('span');labelEl.textContent=label+'：';
+  const number=document.createElement('strong');number.textContent=count+'品';
+  el.append(labelEl,number);counts.append(el);
+ }
+ const shownNames=(r.addedNames||[]).slice(0,8),names=$('import-result-names'),list=$('import-result-list');
+ names.hidden=!shownNames.length;list.replaceChildren();
+ shownNames.forEach(name=>{const li=document.createElement('li');li.textContent=name;list.appendChild(li)});
+ if(added>shownNames.length){const li=document.createElement('li');li.textContent=`ほか ${added-shownNames.length}品`;list.appendChild(li)}
+ const details=$('import-result-details');
+ const notes=[];
+ if(errors.length)notes.push('確認が必要：\n'+errors.slice(0,5).join('\n')+(errors.length>5?`\nほか${errors.length-5}件`:''));
+ if(r.saved===false)notes.push('端末内保存に失敗しました。レシピをバックアップして保管してください。');
+ details.hidden=!notes.length;details.textContent=notes.join('\n');
+ openImportDialog();
+}
+function showImportError(message){
+ $('import-result-title').textContent='JSONを取り込めませんでした';
+ $('import-result-description').textContent='JSONの形式を確認して、もう一度お試しください。';
+ $('import-result-counts').replaceChildren();$('import-result-names').hidden=true;
+ const details=$('import-result-details');details.hidden=false;details.textContent=String(message);
+ openImportDialog();
+}
+$('import-result-close').addEventListener('click',()=>resultDialog.close());
+// Native dialog also supports Esc / Android browser back to close.
+$('import-recipes').addEventListener('click',()=>{
+ try{
+  const val=parseRecipeJSON($('recipe-json').value),result=importData(val);
+  if(result.added>0)$('recipe-json').value='';
+  showImportResult(result);
+ }catch(e){status('取り込み失敗：'+e.message,true);showImportError(e.message)}
+});
+$('json-file').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  if(file.size>16*1024*1024)throw new Error('16MB以下のJSONファイルを選んでください');
+  const value=parseRecipeJSON(await file.text()),result=importData(value);
+  showImportResult(result);
+ }catch(e){status('ファイルの読み込み失敗：'+e.message,true);showImportError(e.message)}
+ e.target.value='';
+});
+function backupJSON(){
+ const blob=new Blob([JSON.stringify(buildBackup(),null,2)],{type:'application/json;charset=utf-8'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download='余りもの献立メーカー_レシピバックアップ.json';document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),6000);
+ status(`登録済みのレシピ ${EXTRA_RECIPES.length}品を書き出しました。ファイルを保管してください。`);
+}
+$('export-json').addEventListener('click',backupJSON);
+$('mine-list').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');
+ if(edit){fillEditor(Number(edit.dataset.edit));return}
+ if(del){const index=Number(del.dataset.delete),r=EXTRA_RECIPES[index];if(!r)return;
+  if(!confirm(`「${r.name}」を削除しますか？`))return;
+  EXTRA_RECIPES.splice(index,1);clearEditor();rebuildIndex();
+  const ok=persist();status(`「${r.name}」を削除しました。${ok?'':'端末内へ保存できないため、JSONをバックアップしてください。'}`,!ok);
+ }
+});
+function parseAmountsText(text){
+ const out={};
+ for(const line of String(text).split(/\r?\n/).map(x=>x.trim()).filter(Boolean)){
+  const pos=line.search(/[：:]/);
+  if(pos<=0)throw new Error('分量は「材料名：200g」のように1行ずつ記入してください');
+  const key=line.slice(0,pos).trim(),value=line.slice(pos+1).trim();
+  if(!key||!value)throw new Error('材料名と分量を両方入力してください');
+  if(Object.prototype.hasOwnProperty.call(out,key))throw new Error('同じ材料の分量が重複しています');
+  out[key]=value;
+ }
+ return out;
+}
+$('save-one').addEventListener('click',()=>{
+ try{
+  const item=cleanRecipe({name:$('edit-name').value,type:$('edit-type').value,
+   ingredients:$('edit-ingredients').value.split(/[、,，\n]+/).map(x=>x.trim()).filter(Boolean),
+   servings:$('edit-servings').value,amounts:parseAmountsText($('edit-amounts').value),
+   steps:$('edit-steps').value,source_url:$('edit-url').value,photo:editorPhoto});
+  const duplicate=RECIPES.some((r,i)=>normKey(r.name)===normKey(item.name)&&!(editingIndex>=0&&i===BASE_RECIPES.length+editingIndex)&&!(editingBaseKey!==null&&i===BASE_RECIPES.findIndex(b=>b.name===editingBaseKey)));
+  if(duplicate)throw new Error('同じ名前の料理がすでに登録されています');
+  if(editingBaseKey!==null)BASE_OVERRIDES[editingBaseKey]=item;
+  else if(editingIndex>=0){
+   if(Number.isInteger(EXTRA_RECIPES[editingIndex].stock_id))item.stock_id=EXTRA_RECIPES[editingIndex].stock_id;
+   EXTRA_RECIPES[editingIndex]=item;
+  }
+  else EXTRA_RECIPES.push(item);
+  clearEditor();rebuildIndex();
+  const ok=persist();status(`「${item.name}」を保存しました。${ok?'':'端末内へ保存できないため、JSONをバックアップしてください。'}`,!ok);
+  $('edit-mode-note').classList.toggle('error',!ok);
+  $('edit-mode-note').textContent=ok?`「${item.name}」を保存しました。`:'端末内への保存に失敗しました。「レシピを見る」のバックアップ機能でJSONを保存してください。';
+ }catch(e){status('保存できません：'+e.message,true);$('edit-mode-note').classList.add('error');$('edit-mode-note').textContent='保存できません：'+e.message;}
+});
+$('cancel-edit').addEventListener('click',clearEditor);
+$('clear-editor').addEventListener('click',clearEditor);
+
+// 予備147品は常に本体に置き、有効なレシピだけ EXTRA_RECIPES にコピーする。
+let stockShown=20;
+const checkedStock=new Set();
+let stockOpened=false;
+function stockRegistered(index){
+ const reference=STOCK_RECIPES[index];
+ return EXTRA_RECIPES.some(r=>r.stock_id===index||normKey(r.name)===normKey(reference.name));
+}
+function renderStock(){
+ const total=STOCK_RECIPES.length;
+ $('stock-total').textContent=`（${total}品・登録済み ${STOCK_RECIPES.filter((_,i)=>stockRegistered(i)).length}品）`;
+ if(!stockOpened)return;
+ const words=recipeSearchWords($('stock-query').value);
+ const kind=$('stock-kind').value;
+ const results=STOCK_RECIPES.map((r,i)=>({r,i})).filter(({r})=>{
+  if(kind!=='all'&&r.type!==kind)return false;
+  return recipeMatchesWords(r,words);
+ });
+ const shown=results.slice(0,stockShown);
+ for(const i of [...checkedStock])if(stockRegistered(i))checkedStock.delete(i);
+ $('stock-status').textContent=`${results.length}品中${shown.length}品表示 ／ 選択 ${checkedStock.size}品`;
+ $('stock-add-selected').textContent=`選択した${checkedStock.size}品を登録`;
+ $('stock-add-selected').disabled=checkedStock.size===0;
+ $('stock-list').innerHTML=shown.map(({r,i})=>{
+  const done=stockRegistered(i);
+  return `<article class="stash-row"><div class="stash-row-top"><label><input type="checkbox" data-stock-check="${i}" ${done?'disabled':''} ${checkedStock.has(i)?'checked':''}><span class="stash-label">${esc(r.name)}</span></label><span class="stash-done">${done?'登録済み':r.type==='main'?'主菜':'副菜'}</span></div><div class="stash-mat">${esc(r.ingredients.join('・'))} ／ 人数・分量未設定</div><details><summary>簡単な作り方を確認</summary><p>${esc(r.steps)}</p></details></article>`;
+ }).join('')||'<div class="empty">検索条件に合う予備レシピがありません。</div>';
+ const remaining=results.length-shown.length;
+ $('stock-more').hidden=remaining<=0;
+ if(remaining>0)$('stock-more').textContent=`さらに${Math.min(20,remaining)}品を見る ↓`;
+}
+$('stash-panel').addEventListener('toggle',()=>{if($('stash-panel').open){stockOpened=true;renderStock()}});
+$('stock-query').addEventListener('input',()=>{stockShown=20;renderStock()});
+$('stock-kind').addEventListener('change',()=>{stockShown=20;renderStock()});
+$('stock-more').addEventListener('click',()=>{stockShown+=20;renderStock()});
+$('stock-list').addEventListener('change',e=>{
+ const cb=e.target.closest('[data-stock-check]');if(!cb)return;
+ const i=Number(cb.dataset.stockCheck);
+ if(!Number.isInteger(i)||i<0||i>=STOCK_RECIPES.length||stockRegistered(i))return;
+ if(cb.checked)checkedStock.add(i);else checkedStock.delete(i);
+ renderStock();
+});
+$('stock-add-selected').addEventListener('click',()=>{
+ const picked=[...checkedStock].sort((a,b)=>a-b);
+ let added=0,skipped=0;
+ for(const i of picked){
+  if(stockRegistered(i)){skipped++;continue}
+  try{
+   const rec=cleanRecipe(STOCK_RECIPES[i]);rec.stock_id=i;
+   EXTRA_RECIPES.push(rec);rec.ingredients.forEach(x=>AVAILABLE.add(x));added++;
+  }catch(e){skipped++}
+ }
+ checkedStock.clear();rebuildIndex();
+ const saved=persist();
+ status(`予備レシピから${added}品を登録しました。重複などで見送り${skipped}品。${saved?'端末内にも保存しました。':'端末内には保存できませんでした。JSONでバックアップしてください。'}`,!saved);
+});
+
+try{
+ const raw=localStorage.getItem(STORAGE_KEY);
+ if(raw){const result=importData(JSON.parse(raw),true);status(`端末内から登録済みレシピ ${EXTRA_RECIPES.length}品を読み込みました。${result.errors.length?'一部のレシピに問題があります。JSONバックアップを確認してください。':''}`,result.errors.length>0)}
+ else{
+  const legacy=localStorage.getItem(OLD_STORAGE_KEY);
+  if(legacy){const result=importData(JSON.parse(legacy),true);status(`旧版の追加レシピ ${result.added}品を読み込みました。${result.errors.length?'一部のレシピに問題があります。':''}`,result.errors.length>0)}
+  else{rebuildIndex();status('定番27品を収録しています。写真は必要なレシピにだけ登録できます。')}
+ }
+}catch(e){rebuildIndex();status('端末内の保存データを読み込めませんでした。JSONバックアップから復元してください。'+e.message,true)}
+
+</script>
+<script>
+// この登録はHTTPSサイト上でのみ有効。ローカルHTML版はそのまま動作する。
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', {scope: './'}).catch(err => {
+      console.warn('オフライン用データの準備ができませんでした', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
